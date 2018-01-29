@@ -1,0 +1,48 @@
+language: node_js
+node_js: 6.10
+
+env:
+  global:
+
+    - AWS_ACCESS_KEY_ID=AKIAJNPBZJSUNV7GJSVQ
+    - AWS_DEFAULT_REGION=ap-southeast-2
+    - LAMBDA_NAME=coffeeShopMessage
+    - LAMBDA_ALIAS=prod
+
+    # AWS_SECRET_ACCESS_KEY
+    - secure: B/HYX93UxL+IBTbhY2Umn3PSRWWin3mpNzkFTymCZQO5qf6OTakXUfolqlBxFMwmmQ8facYvWk6Lakrf41UWEe3rQyPgQ9ZzwwFZma60T/vF4bDIPN5bBXpEmTIBF1wyohHVRlVv7qzusTa9PGUvWwQagIQaTxgO2ux0pjFo7hoSlQCWrGvXOwfAAbxPM3oR4tqUyWUE4joEZToWMsNQXPE99EW7O1FmNImXH+K51okpW0vcVOw41c+ZPUjrsomzL2KRm9vz5NDP0071YG84xvuWjHlJVhsnkaPZeHzCzjpSDeVmMeQ6nOtpu+hRpf5R1aULkRsZItHGouTqZgDzhAok3fwwiuZKJwD6yyuNPQAM7JcKsjUIpNEhm8fs5DqZQIUFJkThhymRj345nNxPOMEOwliLFBoBrHI0VEXKMBYoDCZ7ra/M/tvK+kan0nuLtC+vtiYZBhx3yxwcK7fp6fk56jMci4pnrzWwAjapdm9H8FpZVshVRA6A9QgRdSrjMfpmej6TXWiDuDRv3Sw99vld5gJ7ghGAuhyqjCxY2LHYobUOtc91t0rcHMevIzw4MzE8unurA2ccIM2D2bEf3pSuB37i8YHIXsnGCe3O4Sa9nP0p5uImSAxWLRJJvCzjFTCYk4MbM7IhcxEXmCx+bTJPiMa5aDmxEVHMXlRlsiM=
+
+install: true
+script: true
+
+deploy:
+
+  - provider: lambda
+    publish: true
+    function_name: $LAMBDA_NAME
+    region: $AWS_DEFAULT_REGION
+    role: arn:aws:iam::873114526714:role/genericLambdaRole
+    description: Sends Slack alerts when The Good Food Collective is closing for the day.
+    runtime: nodejs6.10
+    timeout: 15
+    handler_name: handler
+    access_key_id: $AWS_ACCESS_KEY_ID
+    secret_access_key:
+      secure: ZUxPk6qYx1UDXMxZAGS7qOmVu7TeEbYbzelp92AHv1DMImkrDt5wPBd7Abv7Is7UXK25/2LHsuZhigs87IxURTSOHxJabXvpIDJPwwlpWCDfxR+YnCNKJq1Onvgxq2lBhGfVCGItFin7bHt/AJUDij6ykWI7R4xP2v/TVRv9tvus1ixSiXCam+T+G7+GJxnzWBH6Guw6Cpa7YmqDh8bNUlBmzeuNkWVlX4sxCfgFokGHXnUIKWIIhe7TfNGgOqP4Epysh1RUEabhLBj5uowsHHEvGk99imyRvdMd03NcCl9Tgg55v4UC2jOPMWWWP173+hZYR1wzXdPkU4GLoD5t/Je8HR7l9vTMEr9f03WWcFLI/6R1pmlkjFbb2Uts/dPcNoeK5wsarDDJB9wliYb+Qrk3ete9IUiUuasMMfWGOHNmInkj8xZeO9uyd7+sj8IP2Kt6IJBKCZIMlZcnb1Li8YYbR4sETrkAVYryoamHjktnurHrnWTKbSyynmdouSKlHvf+kwTZanWySFW23PtZ6KVGJYe5TR51p8MoRv3i0g7hiqW6jjDyd/YesZCEg9XVvznJsMo69tTKEYkIPTsULSdYv5y3L2na6oW1HX2Xzbz+E1YT1gSj+om8np31fUA6kEiFjIslSbCf7wZEisgofgUgLTPCmT3j/KRkN5PVEj8=
+    skip_cleanup: true
+    on:
+      branch: master
+
+after_deploy:
+
+  # Set a Lambda alias to the most recently deployed version.
+  - pip install awscli --upgrade --user
+  - export MOST_RECENT=$(aws lambda list-versions-by-function --function "${LAMBDA_NAME}" --max-items 10000 | node -e "let stdin=''; process.stdin.on('data',(chunk)=>{stdin+=chunk}).on('end',()=>{console.log(JSON.parse(stdin).Versions.pop().Version)})")
+  - aws lambda update-alias --function-name "${LAMBDA_NAME}" --name "${LAMBDA_ALIAS}" --function-version "${MOST_RECENT}"
+
+notifications:
+  email: false
+  slack:
+    on_start: always
+    rooms:
+      - secure: r9mNtdswpuUrtoqTmMAzK80V2ajUAoJFdDgjVE1/Hg8BBwtb9OyUjGBtvmo6reGblp0B3tTYYwziXl3MCGyvbEizUb9r38TIwfx/1W+6q2fBQszWrW5VjE2ykECCyN6PcpEPcX0IKMrLknNhOyeE7XW6W0fvZ2UnKh/8jZLTBCcveCrLj0ZHWctEAyDLlnnzTYn7koXlVYRHRVwqCeK2y7zwdJDp/0/aHllDrVyi2s6mcqwXqtU7D/uaO0kxR5PAcmHng8kM8esDb5CHg6qnQgzO6GPKARsp8JnyXvgOTQh6vVvPusQv2p6k3o29gfTkgq50eNzQXBja7rkdNoI4l1+jgsngZYe4doZAHxhXbqt5Siyv9ZILXt02OQY0vsfGih5qLO5yXrxuZ++89rbDBOWhQkLnqAWXpqc1yKa0r/BfSYp1eOwuKv9r2ppvdLo5EgquK3g+e2EgKaNhGDhSlBpJmo0/9m8dsM5Q75OUitt0H90EaJ6jf7rP7ow/23yHTH0kwWjBJb8igdRyJ68bYmk5XE3/7E29rQpOiGUq3btp6kfrAi9n8zCd0GzmISRNXg3AIJOiSC/8EgfLxENq+nwAb0Dco8zZJ1IKOhFbhlbpjz0VtI9qybUrUiWaq/OH5PNSBJgqP8bGXPzYlvoOi0IKJzRxDwmiGrJpn5vR6KA=
