@@ -1,4 +1,5 @@
 language: node_js
+services: docker
 node_js: 6.10
 
 env:
@@ -16,8 +17,18 @@ env:
     # AWS_SECRET_ACCESS_KEY
     - secure: B/HYX93UxL+IBTbhY2Umn3PSRWWin3mpNzkFTymCZQO5qf6OTakXUfolqlBxFMwmmQ8facYvWk6Lakrf41UWEe3rQyPgQ9ZzwwFZma60T/vF4bDIPN5bBXpEmTIBF1wyohHVRlVv7qzusTa9PGUvWwQagIQaTxgO2ux0pjFo7hoSlQCWrGvXOwfAAbxPM3oR4tqUyWUE4joEZToWMsNQXPE99EW7O1FmNImXH+K51okpW0vcVOw41c+ZPUjrsomzL2KRm9vz5NDP0071YG84xvuWjHlJVhsnkaPZeHzCzjpSDeVmMeQ6nOtpu+hRpf5R1aULkRsZItHGouTqZgDzhAok3fwwiuZKJwD6yyuNPQAM7JcKsjUIpNEhm8fs5DqZQIUFJkThhymRj345nNxPOMEOwliLFBoBrHI0VEXKMBYoDCZ7ra/M/tvK+kan0nuLtC+vtiYZBhx3yxwcK7fp6fk56jMci4pnrzWwAjapdm9H8FpZVshVRA6A9QgRdSrjMfpmej6TXWiDuDRv3Sw99vld5gJ7ghGAuhyqjCxY2LHYobUOtc91t0rcHMevIzw4MzE8unurA2ccIM2D2bEf3pSuB37i8YHIXsnGCe3O4Sa9nP0p5uImSAxWLRJJvCzjFTCYk4MbM7IhcxEXmCx+bTJPiMa5aDmxEVHMXlRlsiM=
 
-install: true
-script: true
+cache:
+  yarn: true
+  directories:
+    - node_modules
+
+install: yarn
+
+script:
+  - yarn lint
+  - yarn test
+
+before_deploy: rm -rf node_modules && yarn --prod && rm -rf tests .*rc.js
 
 deploy:
 

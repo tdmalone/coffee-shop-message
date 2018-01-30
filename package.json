@@ -11,7 +11,7 @@
     "lint": "cross-env DEBUG=eslint:cli-engine eslint --color --ignore-pattern '/coverage/' --ignore-pattern '/docs/' --ignore-pattern '!.eslintrc.js' \"**/*.js\"",
     "fix": "yarn lint --fix",
     "test": "yarn docker-tests && yarn unit-tests",
-    "docker-tests": "yarn docker-test-1 && yarn docker-test-2 && yarn docker-test-3"
+    "docker-tests": "yarn docker-test-1 && yarn docker-test-2 && yarn docker-test-3",
     "docker-test-1": "yarn _docker '{\"pathParameters\": { \"proxy\": \"closing/soon\" } }'",
     "docker-test-2": "yarn _docker '{\"pathParameters\": { \"proxy\": \"closing/now\" } }'",
     "docker-test-3": "yarn _docker '{\"pathParameters\": { \"proxy\": \"closing/early\" } }'",
