@@ -10,13 +10,13 @@
   "scripts": {
     "lint": "cross-env DEBUG=eslint:cli-engine eslint --color --ignore-pattern '/coverage/' --ignore-pattern '/docs/' --ignore-pattern '!.eslintrc.js' \"**/*.js\"",
     "fix": "yarn lint --fix",
-    "test": "yarn docker-tests && yarn unit-tests",
+    "test": "yarn unit-tests && yarn docker-tests",
+    "unit-tests": "jest --verbose --coverage",
     "docker-tests": "yarn docker-test-1 && yarn docker-test-2 && yarn docker-test-3",
     "docker-test-1": "yarn _docker '{\"pathParameters\": { \"proxy\": \"closing/soon\" } }'",
     "docker-test-2": "yarn _docker '{\"pathParameters\": { \"proxy\": \"closing/now\" } }'",
     "docker-test-3": "yarn _docker '{\"pathParameters\": { \"proxy\": \"closing/early\" } }'",
-    "_docker": "docker run --rm -e CI -e SLACK_HOOK_DEV -e SNS_TOPIC_DEV -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION -v \"${PWD}\":/var/task lambci/lambda:nodejs6.10 index.handler",
-    "unit-tests": "jest --verbose --coverage"
+    "_docker": "docker run --rm -e CI -e SLACK_HOOK_DEV -e SNS_TOPIC_DEV -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION -v \"${PWD}\":/var/task lambci/lambda:nodejs6.10 index.handler"
   },
   "keywords": [
     "api-gateway",

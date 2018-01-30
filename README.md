@@ -14,7 +14,7 @@ To run all tests at once:
 
     yarn test
 
-#### Unit Tests
+### Unit Tests
 
 To run:
 
@@ -22,13 +22,13 @@ To run:
 
 Unit tests are yet to be written, and will currently just pass.
 
-#### Integration Tests
+### Integration Tests
 
 To run:
 
     yarn docker-tests
 
-Integration tests require Docker and run in `lambci/lambda:nodejs6.10` ([GitHub](https://github.com/lambci/docker-lambda) | [Docker Hub](https://hub.docker.com/r/lambci/lambda/)).
+Integration tests require [Docker](https://docs.docker.com/install/). They run in `lambci/lambda:nodejs6.10` ([GitHub](https://github.com/lambci/docker-lambda) | [Docker Hub](https://hub.docker.com/r/lambci/lambda/)).
 
 The following environment variables must be defined on your system:
 
@@ -39,14 +39,14 @@ The following environment variables must be defined on your system:
 * `AWS_DEFAULT_REGION`
 * `CI` - optional
 
-The final `CI` variable above is optional, but recommended. If set (which it is [by default on Travis CI](https://docs.travis-ci.com/user/environment-variables/#Default-Environment-Variables), for instance), it will cause errors to be thrown rather than returned as an [API Gateway style response](https://docs.aws.amazon.com/apigateway/latest/developerguide/handle-errors-in-lambda-integration.html), which is what you want in a continuous integration environment. If not set, tests will still pass, as errors will be mapped to a HTTP status code rather than thrown.
+The final `CI` variable above is optional, but recommended. If set (which it is [by default on Travis CI](https://docs.travis-ci.com/user/environment-variables/#Default-Environment-Variables), for instance), it will cause errors to be _thrown_ rather than returned as an [API Gateway style response](https://docs.aws.amazon.com/apigateway/latest/developerguide/handle-errors-in-lambda-integration.html). If not set, tests will still 'pass', as errors will be mapped to a HTTP status code rather than thrown.
 
 ## TODO
 
 * Add basic unit tests
 * Add integration tests (in progress)
 * Clean up the code a little/add inline docs etc. (in progress)
-* Add sending to an SNS topic, to support email/text subscribers (in progress)
+* Add sending to an SNS topic, to support email/text subscribers (in progress, along with promisifying)
 * Come up with an easy way (Lambda func with static frontend?) for the shop or customers themselves to subscribe e-mails and mobile numbers to the SNS topic
 
 ## License
