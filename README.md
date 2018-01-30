@@ -8,11 +8,46 @@ Like all good cafes they open early, and sometimes close early - particularly wh
 
 ![The message as seen in our coffee-specific Slack channel](slack-screenshot.png?raw=true "The message as seen in our coffee-specific Slack channel")
 
+## Tests
+
+To run all tests at once:
+
+    yarn test
+
+#### Unit Tests
+
+To run:
+
+    yarn unit-tests
+
+Unit tests are yet to be written, and will currently just pass.
+
+#### Integration Tests
+
+To run:
+
+    yarn docker-tests
+
+Integration tests require Docker and run in `lambci/lambda:nodejs6.10` ([GitHub](https://github.com/lambci/docker-lambda) | [Docker Hub](https://hub.docker.com/r/lambci/lambda/)).
+
+The following environment variables must be defined on your system:
+
+* `SLACK_HOOK_DEV`
+* `SNS_TOPIC_DEV`
+* `AWS_ACCESS_KEY_ID`
+* `AWS_SECRET_ACCESS_KEY`
+* `AWS_DEFAULT_REGION`
+* `CI` - optional
+
+The final `CI` variable above is optional, but recommended. If set (which it is [by default on Travis CI](https://docs.travis-ci.com/user/environment-variables/#Default-Environment-Variables), for instance), it will cause errors to be thrown rather than returned as an [API Gateway style response](https://docs.aws.amazon.com/apigateway/latest/developerguide/handle-errors-in-lambda-integration.html), which is what you want in a continuous integration environment. If not set, tests will still pass, as errors will be mapped to a HTTP status code rather than thrown.
+
 ## TODO
 
-* Add basic tests
-* Clean up the code a little
-* Add sending to an SNS topic, to support email/text subscribers
+* Add basic unit tests
+* Add integration tests (in progress)
+* Clean up the code a little/add inline docs etc. (in progress)
+* Add sending to an SNS topic, to support email/text subscribers (in progress)
+* Come up with an easy way (Lambda func with static frontend?) for the shop or customers themselves to subscribe e-mails and mobile numbers to the SNS topic
 
 ## License
 

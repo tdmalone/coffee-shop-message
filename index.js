@@ -1,3 +1,8 @@
+/**
+ *
+ *
+ * @author Tim Malone <tdmalone@gmail.com>
+ */
 
 const aws = require( 'aws-sdk' ),
       https = require( 'https' );
@@ -46,6 +51,14 @@ exports.handler = function( event, context, callback ) {
 
 }; // Exports.handler.
 
+/**
+ *
+ *
+ * @param {Error} error
+ * @param {string} response
+ * @param {function} callback
+ * @return {undefined}
+ */
 function finishRequest( error, response, callback ) {
 
   const apiResponse = {
@@ -57,11 +70,17 @@ function finishRequest( error, response, callback ) {
 
   const logFunction = error ? console.error : console.log;
   logFunction( error ? error : response );
-  callback( null, apiResponse );
+  callback( error && process.env.CI ? error : null, apiResponse );
 
 } // Function finishRequest.
 
-function sendSnsMessage( message, callback ) {
+/**
+ *
+ *
+ * @param {string} message
+ * @return {Promise}
+ */
+function sendSnsMessage( message ) {
   return new Promise( ( resolve, reject ) => {
 
     if ( ! process.env.SNS_TOPIC ) {
@@ -90,6 +109,12 @@ function sendSnsMessage( message, callback ) {
   }); // Return Promise.
 } // Function sendSnsMessage.
 
+/**
+ *
+ *
+ * @param {string} message
+ * @return {Promise}
+ */
 function sendToSlack( message ) {
   return new Promise( ( resolve, reject ) => {
 
