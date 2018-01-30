@@ -1,5 +1,6 @@
 
-const https = require( 'https' );
+const aws = require( 'aws-sdk' ),
+      https = require( 'https' );
 
 exports.handler = function( event, context, callback ) {
 
@@ -7,6 +8,7 @@ exports.handler = function( event, context, callback ) {
   const environment = 'prod' === context.invokedFunctionArn.split( ':' ).pop() ? 'prod' : 'dev',
         envSuffix = '_' + environment.toUpperCase();
   process.env.SLACK_HOOK = process.env[ 'SLACK_HOOK' + envSuffix ];
+  process.env.SNS_TOPIC = process.env[ 'SNS_TOPIC' + envSuffix ];
   console.info( 'Running in ' + environment + ' mode.' );
 
   let message = '';
@@ -35,53 +37,103 @@ exports.handler = function( event, context, callback ) {
 
   }
 
-  sendToSlack( message, callback );
+  Promise.all([
+    sendSnsMessage( message ),
+    sendToSlack( message )
+  ])
+    .then( ( response ) => { finishRequest( null, response, callback ); })
+    .catch( ( error ) => { finishRequest( error, null, callback ); });
 
 }; // Exports.handler.
 
-function sendToSlack( message, callback ) {
-
-  const options = {
-    method:   'POST',
-    hostname: 'hooks.slack.com',
-    port:     443,
-    path:     '/services/' + process.env.SLACK_HOOK
-  };
-
-  const data = {
-    text: message
-  };
+function finishRequest( error, response, callback ) {
 
   const apiResponse = {
     isBase64Encoded: false,
     headers:         {},
+    statusCode:      error ? error : response,
+    body:            error ? 500 : 200
   };
 
-  const request = https.request( options, ( response ) => {
+  const logFunction = error ? console.error : console.log;
+  logFunction( error ? error : response );
+  callback( null, apiResponse );
 
-    let body = '';
-    response.setEncoding( 'utf8' );
+} // Function finishRequest.
 
-    response.on( 'data', ( chunk ) => {
-      body += chunk;
-    }).on( 'end', () => {
+function sendSnsMessage( message, callback ) {
+  return new Promise( ( resolve, reject ) => {
 
-      const logFunction = 'ok' === body ? console.log : console.error;
-      logFunction( ( 'ok' === body ? 'Error' : 'Response' ) + ' from Slack: ' + body );
+    if ( ! process.env.SNS_TOPIC ) {
+      reject( 'No SNS_TOPIC provided.' );
+      return;
+    }
 
-      apiResponse.statusCode = response.statusCode;
-      apiResponse.body = 'ok' === body ? 'Message sent.' : body;
+    const snsMessage = {
+      Message:  JSON.stringify( message ),
+      TopicArn: process.env.SNS_TOPIC
+    };
 
-      callback( null, apiResponse );
+    const sns = new aws.SNS();
 
+    sns.publish( snsMessage, ( error ) => {
+
+      if ( error ) {
+        reject( error );
+        return;
+      }
+
+      resolve();
+
+    }); // Sns.publish.
+
+  }); // Return Promise.
+} // Function sendSnsMessage.
+
+function sendToSlack( message ) {
+  return new Promise( ( resolve, reject ) => {
+
+    if ( ! process.env.SLACK_HOOK ) {
+      reject( 'No SLACK_HOOK provided.' );
+      return;
+    }
+
+    const options = {
+      method:   'POST',
+      hostname: 'hooks.slack.com',
+      port:     443,
+      path:     '/services/' + process.env.SLACK_HOOK
+    };
+
+    const data = {
+      text: message
+    };
+
+    const request = https.request( options, ( response ) => {
+
+      let body = '';
+      response.setEncoding( 'utf8' );
+
+      response.on( 'data', ( chunk ) => {
+        body += chunk;
+      }).on( 'end', () => {
+
+        if ( 'ok' === body ) {
+          resolve( body );
+          return;
+        }
+
+        reject( body );
+
+      });
     });
-  });
 
-  request.on( 'error', ( error ) => {
-    throw Error( 'Problem with Slack request: ' + error.message );
-  });
+    request.on( 'error', ( error ) => {
+      reject( 'Error with Slack request: ' + error.message );
+    });
 
-  request.write( JSON.stringify( data ) );
-  request.end();
+    request.write( JSON.stringify( data ) );
+    request.end();
 
+  }); // Return Promise.
 } // Function sendToSlack.
