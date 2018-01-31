@@ -84,12 +84,13 @@ function finishRequest( error, response, callback ) {
   const apiResponse = {
     isBase64Encoded: false,
     headers:         {},
-    statusCode:      error ? error : response,
-    body:            error ? HTTP_SERVER_ERROR : HTTP_OK
+    statusCode:      error ? ( error.statusCode || HTTP_SERVER_ERROR ) : HTTP_OK,
+    body:            error ? ( error.message || error ) : 'Message sent, thanks guys!'
   };
 
   const logFunction = error ? console.error : console.log;
-  logFunction( error ? error : response );
+  logFunction( error ? 'Error: ' + error : response );
+  logFunction( apiResponse );
   callback( error && CI ? error : null, apiResponse );
 
 } // Function finishRequest.
@@ -168,7 +169,7 @@ function sendToSlack( message ) {
           return;
         }
 
-        reject( body );
+        reject( body ? body : 'No response received from Slack.' );
 
       });
     });
