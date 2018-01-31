@@ -44,9 +44,6 @@ The final `CI` variable above is optional, but recommended. If set (which it is 
 ## TODO
 
 * Add basic unit tests
-* Add integration tests (in progress)
-* Clean up the code a little/add inline docs etc. (in progress)
-* Add sending to an SNS topic, to support email/text subscribers (in progress, along with promisifying)
 * Come up with an easy way (Lambda func with static frontend?) for the shop or customers themselves to subscribe e-mails and mobile numbers to the SNS topic
 
 ## License
