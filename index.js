@@ -1,20 +1,34 @@
 /**
+ * Receives a custom 'coffee shop closing' event from an AWS API Gateway proxy endpoint.
+ * Disseminates it to a custom Slack hook and SNS topic.
  *
+ * Designed for use with a Flic button at The Good Food Collective, Canterbury VIC Australia.
  *
  * @author Tim Malone <tdmalone@gmail.com>
  */
 
+'use strict';
+
 const aws = require( 'aws-sdk' ),
       https = require( 'https' );
+
+const HTTP_OK = 200,
+      HTTP_SERVER_ERROR = 500,
+      CI = process.env.CI; // eslint-disable-line no-process-env
+
+// These will be like constants, but we can only set them once we have the context object.
+let SLACK_HOOK, SNS_TOPIC;
 
 exports.handler = function( event, context, callback ) {
 
   // Manage separate environment variables per stage.
+  /* eslint-disable no-process-env */
   const environment = 'prod' === context.invokedFunctionArn.split( ':' ).pop() ? 'prod' : 'dev',
         envSuffix = '_' + environment.toUpperCase();
-  process.env.SLACK_HOOK = process.env[ 'SLACK_HOOK' + envSuffix ];
-  process.env.SNS_TOPIC = process.env[ 'SNS_TOPIC' + envSuffix ];
+  SLACK_HOOK = process.env[ 'SLACK_HOOK' + envSuffix ];
+  SNS_TOPIC = process.env[ 'SNS_TOPIC' + envSuffix ];
   console.info( 'Running in ' + environment + ' mode.' );
+  /* eslint-enable no-process-env */
 
   let message = '';
 
@@ -27,7 +41,7 @@ exports.handler = function( event, context, callback ) {
       break;
 
     case 'closing/now':
-      message = 'We\'re closing! Get down here *now* if you want coffee!'
+      message = 'We\'re closing! Get down here *now* if you want coffee!';
       break;
 
     case 'closing/early':
@@ -42,22 +56,28 @@ exports.handler = function( event, context, callback ) {
 
   }
 
-  Promise.all([
-    sendSnsMessage( message ),
-    sendToSlack( message )
-  ])
-    .then( ( response ) => { finishRequest( null, response, callback ); })
-    .catch( ( error ) => { finishRequest( error, null, callback ); });
+  Promise.all([ sendSnsMessage( message ), sendToSlack( message ) ])
+    .then( ( response ) => {
+      finishRequest( null, response, callback );
+    })
+    .catch( ( error ) => {
+      finishRequest( error, null, callback );
+    });
 
 }; // Exports.handler.
 
 /**
+ * Finishes off the incoming API Gateway request by responding with a valid API Gateway response
+ * object, depending on whether the request succeeded or an issue was encountered. Currently
+ * assumes all issues are server issues (i.e. HTTP status code 500).
  *
- *
- * @param {Error} error
- * @param {string} response
- * @param {function} callback
+ * @param {mixed}    error    The error encountered during processing of the request. Could be a
+ *                            string, an object, or an Error - or null if no error occurred.
+ * @param {mixed}    response The response received from external services while processing. Could
+ *                            be a string, an object, an array... or null if an error occurred.
+ * @param {function} callback Function to call to report completion.
  * @return {undefined}
+ * @see https://docs.aws.amazon.com/apigateway/latest/developerguide/handle-errors-in-lambda-integration.html
  */
 function finishRequest( error, response, callback ) {
 
@@ -65,44 +85,44 @@ function finishRequest( error, response, callback ) {
     isBase64Encoded: false,
     headers:         {},
     statusCode:      error ? error : response,
-    body:            error ? 500 : 200
+    body:            error ? HTTP_SERVER_ERROR : HTTP_OK
   };
 
   const logFunction = error ? console.error : console.log;
   logFunction( error ? error : response );
-  callback( error && process.env.CI ? error : null, apiResponse );
+  callback( error && CI ? error : null, apiResponse );
 
 } // Function finishRequest.
 
 /**
+ * Sends an SNS message to the topic provided by the environment.
  *
- *
- * @param {string} message
- * @return {Promise}
+ * @param {string} message The message to send.
+ * @return {Promise} A promise to send the message, funnily enough!
  */
 function sendSnsMessage( message ) {
   return new Promise( ( resolve, reject ) => {
 
-    if ( ! process.env.SNS_TOPIC ) {
+    if ( ! SNS_TOPIC ) {
       reject( 'No SNS_TOPIC provided.' );
       return;
     }
 
     const snsMessage = {
       Message:  JSON.stringify( message ),
-      TopicArn: process.env.SNS_TOPIC
+      TopicArn: SNS_TOPIC
     };
 
     const sns = new aws.SNS();
 
-    sns.publish( snsMessage, ( error ) => {
+    sns.publish( snsMessage, ( error, result ) => {
 
       if ( error ) {
         reject( error );
         return;
       }
 
-      resolve();
+      resolve( result );
 
     }); // Sns.publish.
 
@@ -110,15 +130,15 @@ function sendSnsMessage( message ) {
 } // Function sendSnsMessage.
 
 /**
+ * Sends a message to the incoming Slack webhook provided by the environment.
  *
- *
- * @param {string} message
- * @return {Promise}
+ * @param {string} message The message to send.
+ * @return {Promise} A promise to send the message!
  */
 function sendToSlack( message ) {
   return new Promise( ( resolve, reject ) => {
 
-    if ( ! process.env.SLACK_HOOK ) {
+    if ( ! SLACK_HOOK ) {
       reject( 'No SLACK_HOOK provided.' );
       return;
     }
@@ -127,7 +147,7 @@ function sendToSlack( message ) {
       method:   'POST',
       hostname: 'hooks.slack.com',
       port:     443,
-      path:     '/services/' + process.env.SLACK_HOOK
+      path:     '/services/' + SLACK_HOOK
     };
 
     const data = {
