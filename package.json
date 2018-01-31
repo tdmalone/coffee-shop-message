@@ -1,6 +1,6 @@
 {
   "name": "coffee-shop-message",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "description": "Connected to a Flic button via the AWS API Gateway, sends Slack and SNS messages when our local coffee shop is closing for the day.",
   "homepage": "https://github.com/tdmalone/coffee-shop-message#readme",
   "repository": "git+https://github.com/tdmalone/coffee-shop-message.git",
