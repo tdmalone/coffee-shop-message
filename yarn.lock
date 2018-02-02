@@ -10,6 +10,10 @@
     eslint-config-wordpress "^2.0.0"
     eslint-plugin-jest "^21.2.0"
 
+"@tdmalone/lambda-proxy-response@^0.0.2":
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/@tdmalone/lambda-proxy-response/-/lambda-proxy-response-0.0.2.tgz#a00c5cfb37ea39029c2e7fba462575c83cc23cd6"
+
 abab@^1.0.3:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/abab/-/abab-1.0.4.tgz#5faad9c2c07f60dd76770f71cf025b62a63cfd4e"

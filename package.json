@@ -33,6 +33,7 @@
     ]
   },
   "dependencies": {
+    "@tdmalone/lambda-proxy-response": "^0.0.2",
     "aws-sdk": "^2.170.0"
   },
   "devDependencies": {
