@@ -57,6 +57,8 @@ after_deploy:
 
 notifications:
   email: false
+  webhooks:
+    urls: https://api.tm.id.au/dev/travis/jobStatus
   slack:
     on_start: always
     rooms:
