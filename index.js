@@ -94,7 +94,6 @@ function sendSnsMessage( message ) {
       resolve( result );
 
     }); // Sns.publish.
-
   }); // Return Promise.
 } // Function sendSnsMessage.
 

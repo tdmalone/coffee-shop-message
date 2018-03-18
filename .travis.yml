@@ -28,7 +28,7 @@ script:
   - yarn lint
   - yarn test
 
-before_deploy: rm -rf node_modules && yarn --prod && rm -rf tests .*rc.js
+before_deploy: rm -rf node_modules && yarn --prod && rm -rf node_modules/aws-sdk tests .*rc.js
 
 deploy:
 
