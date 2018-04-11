@@ -7,8 +7,17 @@ env:
 
     - AWS_ACCESS_KEY_ID=AKIAJNPBZJSUNV7GJSVQ
     - AWS_DEFAULT_REGION=ap-southeast-2
+
     - LAMBDA_NAME=coffeeShopMessage
+    - LAMBDA_DESCRIPTION="Sends Slack and SNS messages when The Good Food Collective is closing for the day."
+    - LAMBDA_TIMEOUT=15
+    - LAMBDA_ROLE=arn:aws:iam::873114526714:role/genericLambdaRole
     - LAMBDA_ALIAS=prod
+
+    - LAMBDA_RUNTIME=nodejs6.10
+    - LAMBDA_MODULE=index
+    - LAMBDA_HANDLER=handler
+
     - SNS_TOPIC_DEV=arn:aws:sns:ap-southeast-2:873114526714:tim-dev-queue
 
     # SLACK_HOOK_DEV
@@ -22,38 +31,92 @@ cache:
   directories:
     - node_modules
 
-install: yarn
+install:
+
+  # Install dependencies.
+  - yarn
+
+  # Install Terraform for checking infrastructure configuration.
+  - curl --location https://releases.hashicorp.com/terraform/0.11.5/terraform_0.11.5_linux_amd64.zip > terraform.zip
+  - unzip terraform.zip
 
 script:
+
   - yarn lint
   - yarn test
 
-before_deploy: rm -rf node_modules && yarn --prod && rm -rf node_modules/aws-sdk tests .*rc.js
+  # Check that Terraform config files are formatted correctly and that they validate.
+  - ./terraform fmt -check
+  - ./terraform init
+  - ./terraform validate
+
+  # If state is stored remotely, we can also check that the state is up-to-date - i.e. that no
+  # changes have been pushed without being applied.
+  #
+  # We only care about the exit code here, and don't want to expose any potentially sensitive data,
+  # so we also redirect the output.
+  #
+  # THIS SHOULD BE COMMENTED OUT IF STATE IS MANAGED LOCALLY, WHICH IS THE DEFAULT IN TERRAFORM.
+  # FOR SECURITY REASONS, STATE SHOULD NEVER BE COMMITTED TO THE REPOSITORY.
+  #
+  #- ./terraform plan -detailed-exitcode > /dev/null
+
+before_deploy:
+
+  # Remove the AWS SDK as it's already available in the Lambda environment.
+  - yarn remove aws-sdk
+
+  # Clean up dependencies + unneeded files, and reinstall production dependencies only.
+  - rm -rf coverage node_modules tests .*rc.js
+  - yarn --prod
 
 deploy:
 
-  - provider: lambda
-    publish: true
+  # Deploy to $LATEST on dev branch. (i.e. don't publish a new version).
+
+  - on:
+      branch: dev
+    publish: false
+
+    provider: lambda
     function_name: $LAMBDA_NAME
     region: $AWS_DEFAULT_REGION
-    role: arn:aws:iam::873114526714:role/genericLambdaRole
-    description: Sends Slack and SNS messages when The Good Food Collective is closing for the day.
-    runtime: nodejs6.10
-    timeout: 15
-    handler_name: handler
+    role: $LAMBDA_ROLE
+    description: $LAMBDA_DESCRIPTION
+    runtime: $LAMBDA_RUNTIME
+    timeout: $LAMBDA_TIMEOUT
+    module_name: $LAMBDA_MODULE
+    handler_name: $LAMBDA_HANDLER
     access_key_id: $AWS_ACCESS_KEY_ID
-    secret_access_key:
-      secure: ZUxPk6qYx1UDXMxZAGS7qOmVu7TeEbYbzelp92AHv1DMImkrDt5wPBd7Abv7Is7UXK25/2LHsuZhigs87IxURTSOHxJabXvpIDJPwwlpWCDfxR+YnCNKJq1Onvgxq2lBhGfVCGItFin7bHt/AJUDij6ykWI7R4xP2v/TVRv9tvus1ixSiXCam+T+G7+GJxnzWBH6Guw6Cpa7YmqDh8bNUlBmzeuNkWVlX4sxCfgFokGHXnUIKWIIhe7TfNGgOqP4Epysh1RUEabhLBj5uowsHHEvGk99imyRvdMd03NcCl9Tgg55v4UC2jOPMWWWP173+hZYR1wzXdPkU4GLoD5t/Je8HR7l9vTMEr9f03WWcFLI/6R1pmlkjFbb2Uts/dPcNoeK5wsarDDJB9wliYb+Qrk3ete9IUiUuasMMfWGOHNmInkj8xZeO9uyd7+sj8IP2Kt6IJBKCZIMlZcnb1Li8YYbR4sETrkAVYryoamHjktnurHrnWTKbSyynmdouSKlHvf+kwTZanWySFW23PtZ6KVGJYe5TR51p8MoRv3i0g7hiqW6jjDyd/YesZCEg9XVvznJsMo69tTKEYkIPTsULSdYv5y3L2na6oW1HX2Xzbz+E1YT1gSj+om8np31fUA6kEiFjIslSbCf7wZEisgofgUgLTPCmT3j/KRkN5PVEj8=
+    secret_access_key: $AWS_SECRET_ACCESS_KEY
     skip_cleanup: true
-    on:
+
+  # Deploy and publish a new version on master branch.
+
+  - on:
       branch: master
+    publish: true
+
+    provider: lambda
+    function_name: $LAMBDA_NAME
+    region: $AWS_DEFAULT_REGION
+    role: $LAMBDA_ROLE
+    description: $LAMBDA_DESCRIPTION
+    runtime: $LAMBDA_RUNTIME
+    timeout: $LAMBDA_TIMEOUT
+    module_name: $LAMBDA_MODULE
+    handler_name: $LAMBDA_HANDLER
+    access_key_id: $AWS_ACCESS_KEY_ID
+    secret_access_key: $AWS_SECRET_ACCESS_KEY
 
 after_deploy:
 
   # Set a Lambda alias to the most recently deployed version.
-  - pip install awscli --upgrade --user
-  - export MOST_RECENT=$(aws lambda list-versions-by-function --function "${LAMBDA_NAME}" --max-items 10000 | node -e "let stdin=''; process.stdin.on('data',(chunk)=>{stdin+=chunk}).on('end',()=>{console.log(JSON.parse(stdin).Versions.pop().Version)})")
-  - aws lambda update-alias --function-name "${LAMBDA_NAME}" --name "${LAMBDA_ALIAS}" --function-version "${MOST_RECENT}"
+  - if [ "master" = "${TRAVIS_BRANCH}" ]; then
+      pip install awscli --upgrade --user;
+      export MOST_RECENT=$(aws lambda list-versions-by-function --function "${LAMBDA_NAME}" --max-items 10000 | node -e "let stdin=''; process.stdin.on('data',(chunk)=>{stdin+=chunk}).on('end',()=>{console.log(JSON.parse(stdin).Versions.pop().Version)})");
+      aws lambda update-alias --function-name "${LAMBDA_NAME}" --name "${LAMBDA_ALIAS}" --function-version "${MOST_RECENT}";
+    fi;
 
 notifications:
   email: false

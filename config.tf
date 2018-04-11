@@ -13,9 +13,8 @@
  * @see https://www.terraform.io/docs/configuration/providers.html#provider-versions
  */
 provider "aws" {
-  region = "ap-southeast-2"
-
-  #version = "~> 1.14"
+  region  = "ap-southeast-2"
+  version = "~> 1.14"
 }
 
 /**
