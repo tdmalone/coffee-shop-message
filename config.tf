@@ -104,10 +104,6 @@ resource "aws_lambda_function" "function" {
 }
 
 /**
- * TODO: Set up API Gateway to give us a way in to the function.
- */
-
-/**
  * SNS topic for development purposes.
  *
  * @see https://www.terraform.io/docs/providers/aws/r/sns_topic.html
@@ -125,3 +121,85 @@ resource "aws_sns_topic" "sns_topic_prod" {
   name         = "${var.sns_queue_name_prod}"
   display_name = "${var.sns_queue_display_name_prod}"
 }
+
+/**
+ * Main endpoint for the API into the function.
+ *
+ * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_resource.html
+ */
+resource "aws_api_gateway_resource" "main_endpoint" {
+  rest_api_id = "${var.rest_api_id}"
+  parent_id   = "${var.rest_api_parent_path_id}"
+  path_part   = "${var.rest_api_path}"
+}
+
+/**
+ * Proxy endpoint, sitting under the main endpoint.
+ *
+ * This is so we can call eg. /closing/soon without having to define every path at the API level.
+ * We can instead perform our 'routing' logic inside the function itself.
+ *
+ * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_resource.html
+ */
+resource "aws_api_gateway_resource" "proxy_endpoint" {
+  rest_api_id = "${var.rest_api_id}"
+  parent_id   = "${aws_api_gateway_resource.main_endpoint.id}"
+  path_part   = "{proxy+}"
+}
+
+/**
+ * Endpoint method.
+ *
+ * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_method.html
+ */
+resource "aws_api_gateway_method" "method" {
+  rest_api_id   = "${var.rest_api_id}"
+  resource_id   = "${aws_api_gateway_resource.proxy_endpoint.id}"
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+/**
+ * API Gateway Lambda proxy integration.
+ *
+ * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_integration.html
+ */
+resource "aws_api_gateway_integration" "integration" {
+  rest_api_id             = "${var.rest_api_id}"
+  resource_id             = "${aws_api_gateway_resource.proxy_endpoint.id}"
+  http_method             = "${aws_api_gateway_method.method.http_method}"
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+
+  # TODO: Add the stage variable to this - eg. coffeeShopMessage:${stageVariables.lambdaAlias}
+  #       We probably need to build the ARN manually in order to do so, because I don't think it
+  #       sits right at the end of the invoke_arn. We'll also have to not interpolate the above...
+  #       it needs to be sent as-is and interpolated on the API Gateway end.
+  uri = "${aws_lambda_function.function.invoke_arn}"
+}
+
+/**
+ * TODO: Add Lambda invocation permissions (aws_lambda_permission) for each stage (in function_name
+ *       as the last part of the ARN).
+ *       eg. arn:aws:lambda:ap-southeast-2:873114526714:function:coffeeShopMessage:dev
+ *
+ *       @see https://www.terraform.io/docs/providers/aws/r/api_gateway_integration.html#lambda-integration
+ */
+
+
+/**
+ * TODO: Do we also need to add...
+ *       - aws_api_gateway_method_response?
+ *       - aws_api_gateway_method_settings?
+ *       - aws_api_gateway_integration_response?
+ *       - aws_api_gateway_gateway_response?
+ */
+
+
+/**
+ * TODO: Consider also adding...
+ *       - aws_api_gateway_rest_api?
+ *       - aws_api_gateway_stage?
+ *       - aws_api_gateway_deployment?
+ */
+

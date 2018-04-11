@@ -49,6 +49,18 @@ variable "sns_queue_display_name_prod" {
   default = "GFC Coffee"
 }
 
+variable "rest_api_id" {
+  default = "78qkh1lhph"
+}
+
+variable "rest_api_parent_path_id" {
+  default = "ignbcbt303"
+}
+
+variable "rest_api_path" {
+  default = "coffee-test"
+}
+
 /**
  * The following variables should be set elsewhere for security reasons, eg. on the command line,
  * in a .tfvars file, or as environment variables.
