@@ -2,6 +2,8 @@
  * Configures AWS infrastructure for running the coffee-shop-message function.
  * To use, download Terraform and run `terraform init` followed by `terraform apply`.
  *
+ * To set variables, edit ./vars.tf.
+ *
  * @author Tim Malone <tdmalone@gmail.com>
  */
 
@@ -23,7 +25,7 @@ provider "aws" {
  * @see https://www.terraform.io/docs/providers/aws/r/iam_role.html
  */
 resource "aws_iam_role" "role" {
-  name = "coffeeShopMessageLambdaRole"
+  name = "${var.role_name}"
 
   assume_role_policy = <<EOF
 {
@@ -47,7 +49,7 @@ EOF
  * @see https://www.terraform.io/docs/providers/aws/r/iam_role_policy.html
  */
 resource "aws_iam_role_policy" "policy" {
-  name = "coffeeShopMessageLambdaPolicy"
+  name = "${var.policy_name}"
   role = "${aws_iam_role.role.id}"
 
   policy = <<EOF
@@ -84,17 +86,17 @@ EOF
  * @see https://www.terraform.io/docs/providers/aws/r/lambda_function.html
  */
 resource "aws_lambda_function" "function" {
-  function_name = "coffeeShopMessage"
-  description   = "Sends Slack and SNS messages when The Good Food Collective is closing for the day."
+  function_name = "${var.function_name}"
+  description   = "${var.function_description}"
   role          = "${aws_iam_role.role.arn}"
-  handler       = "index.handler"
-  runtime       = "nodejs6.10"
-  timeout       = 15
+  handler       = "${var.function_handler}"
+  runtime       = "${var.function_runtime}"
+  timeout       = "${var.function_timeout}"
 
   environment {
     variables = {
-      SLACK_HOOK_DEV  = ""
-      SLACK_HOOK_PROD = ""
+      SLACK_HOOK_DEV  = "${var.slack_hook_dev}"
+      SLACK_HOOK_PROD = "${var.slack_hook_prod}"
       SNS_TOPIC_DEV   = "${aws_sns_topic.sns_topic_dev.arn}"
       SNS_TOPIC_PROD  = "${aws_sns_topic.sns_topic_prod.arn}"
     }
@@ -111,7 +113,7 @@ resource "aws_lambda_function" "function" {
  * @see https://www.terraform.io/docs/providers/aws/r/sns_topic.html
  */
 resource "aws_sns_topic" "sns_topic_dev" {
-  name = "tim-dev-queue"
+  name = "${var.sns_queue_name_dev}"
 }
 
 /**
@@ -120,5 +122,6 @@ resource "aws_sns_topic" "sns_topic_dev" {
  * @see https://www.terraform.io/docs/providers/aws/r/sns_topic.html
  */
 resource "aws_sns_topic" "sns_topic_prod" {
-  name = "coffee-shop-message"
+  name         = "${var.sns_queue_name_prod}"
+  display_name = "${var.sns_queue_display_name_prod}"
 }
