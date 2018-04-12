@@ -14,20 +14,8 @@ variable "aws_region" {
   default = "ap-southeast-2"
 }
 
-/**
- * Alternatively, this variable could be cut and the use of it in ./config.tf ommited, so that it
- * can be generated randomly.
- */
-variable "role_name" {
-  default = "coffeeShopMessageLambdaRole"
-}
-
-/**
- * Alternatively, this variable could be cut and the use of it in ./config.tf ommited, so that it
- * can be generated randomly.
- */
-variable "policy_name" {
-  default = "coffeeShopMessageLambdaPolicy"
+variable "aws_account_id" {
+  default = "873114526714"
 }
 
 variable "function_name" {
@@ -62,24 +50,49 @@ variable "sns_queue_display_name_prod" {
   default = "GFC Coffee"
 }
 
+variable "rest_api_path" {
+  default = "coffee-test"
+}
+
 /**
- * Alternatively, this hardcoding of an existing API could be removed and the API defined from
- * scratch here.
+ * The following stage variables are used to refer both to the API stages and to the Lambda aliases
+ * that are matched with them.
+ *
+ * WARNING: These aliases are also referred within the function code, where the environment variable
+ *          to use is chosen depending on the alias the function was invoked with. The environment
+ *          variable names themselves, therefore, are also partially dependent on these values.
+ */
+
+variable "dev_stage_alias_name" {
+  default = "dev"
+}
+
+variable "prod_stage_alias_name" {
+  default = "prod"
+}
+
+/**
+ * Alternatively, the following hardcoding of an existing API could be removed and the API defined
+ * from scratch in Terraform instead.
  */
 variable "rest_api_id" {
   default = "78qkh1lhph"
 }
 
-/**
- * Alternatively, this hardcoding of an existing API path could be removed and the API defined from
- * scratch here.
- */
 variable "rest_api_parent_path_id" {
   default = "ignbcbt303"
 }
 
-variable "rest_api_path" {
-  default = "coffee-test"
+/**
+ * Alternatively, the following variables could be cut and the use of them in ./config.tf ommited,
+ * so that they can be generated randomly.
+ */
+variable "role_name" {
+  default = "coffeeShopMessageLambdaRole"
+}
+
+variable "policy_name" {
+  default = "coffeeShopMessageLambdaPolicy"
 }
 
 /**

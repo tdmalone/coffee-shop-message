@@ -180,6 +180,36 @@ resource "aws_api_gateway_integration" "integration" {
 }
 
 /**
+ * Add Lambda execution perms for the API Gateway integration (for the dev stage -> dev alias).
+ *
+ * TODO: Although this seems to work, it might need the source_arn property defined as well, because
+ *       at the moment Terraform is trying to re-create it on each apply.
+ *
+ * @see https://www.terraform.io/docs/providers/aws/r/lambda_permission.html
+ */
+resource "aws_lambda_permission" "permission_dev_stage" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = "${aws_lambda_function.function.arn}:${var.dev_stage_alias_name}"
+  principal     = "apigateway.amazonaws.com"
+}
+
+/**
+ * Add Lambda execution perms for the API Gateway integration (for the prod stage -> prod alias).
+ *
+ * TODO: Although this seems to work, it might need the source_arn property defined as well, because
+ *       at the moment Terraform is trying to re-create it on each apply.
+ *
+ * @see https://www.terraform.io/docs/providers/aws/r/lambda_permission.html
+ */
+resource "aws_lambda_permission" "permission_prod_stage" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = "${aws_lambda_function.function.arn}:${var.prod_stage_alias_name}"
+  principal     = "apigateway.amazonaws.com"
+}
+
+/**
  * Integration response.
  *
  * The need for this is a little confusing because API Gateway states it does not support
@@ -219,15 +249,6 @@ resource "aws_api_gateway_method_response" "method_response" {
     "application/json" = "Empty"
   }
 }
-
-/**
- * TODO: Add Lambda invocation permissions (aws_lambda_permission) for each stage (in function_name
- *       as the last part of the ARN).
- *       eg. arn:aws:lambda:ap-southeast-2:873114526714:function:coffeeShopMessage:dev
- *
- *       @see https://www.terraform.io/docs/providers/aws/r/api_gateway_integration.html#lambda-integration
- */
-
 
 /**
  * TODO: Consider also adding...
