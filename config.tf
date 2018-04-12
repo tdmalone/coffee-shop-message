@@ -15,7 +15,7 @@
  * @see https://www.terraform.io/docs/configuration/providers.html#provider-versions
  */
 provider "aws" {
-  region  = "ap-southeast-2"
+  region  = "${var.aws_region}"
   version = "~> 1.14"
 }
 
@@ -104,6 +104,10 @@ resource "aws_lambda_function" "function" {
 }
 
 /**
+ * TODO: Add function aliases (and maybe a couple of other resources too?)
+ */
+
+/**
  * SNS topic for development purposes.
  *
  * @see https://www.terraform.io/docs/providers/aws/r/sns_topic.html
@@ -160,9 +164,11 @@ resource "aws_api_gateway_method" "method" {
 }
 
 /**
- * API Gateway Lambda proxy integration.
+ * API Gateway Lambda proxy integration, supporting a stage variable so the appropriate function
+ * alias can be called depending on the API stage.
  *
  * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_integration.html
+ * @see https://github.com/hashicorp/terraform/issues/6463#issuecomment-293010256
  */
 resource "aws_api_gateway_integration" "integration" {
   rest_api_id             = "${var.rest_api_id}"
@@ -170,12 +176,48 @@ resource "aws_api_gateway_integration" "integration" {
   http_method             = "${aws_api_gateway_method.method.http_method}"
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
+  uri                     = "arn:aws:apigateway:${var.aws_region}:lambda:path/2015-03-31/functions/${aws_lambda_function.function.arn}:$${stageVariables.lambdaAlias}/invocations"
+}
 
-  # TODO: Add the stage variable to this - eg. coffeeShopMessage:${stageVariables.lambdaAlias}
-  #       We probably need to build the ARN manually in order to do so, because I don't think it
-  #       sits right at the end of the invoke_arn. We'll also have to not interpolate the above...
-  #       it needs to be sent as-is and interpolated on the API Gateway end.
-  uri = "${aws_lambda_function.function.invoke_arn}"
+/**
+ * Integration response.
+ *
+ * The need for this is a little confusing because API Gateway states it does not support
+ * integration responses for Lambda proxy integrations. However, you still need to define it for the
+ * method response to be set up properly.
+ *
+ * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_integration_response.html
+ * @see https://github.com/hashicorp/terraform/issues/10157
+ */
+resource "aws_api_gateway_integration_response" "integration_response" {
+  rest_api_id = "${var.rest_api_id}"
+  resource_id = "${aws_api_gateway_resource.proxy_endpoint.id}"
+  http_method = "${aws_api_gateway_method.method.http_method}"
+  status_code = 200
+
+  response_templates = {
+    "application/json" = ""
+  }
+}
+
+/**
+ * Method response.
+ *
+ * This resource type is not fully documented at the Terraform website, and its setup for a Lambda
+ * proxy integration is a little confusing, but there's help available through the issue at
+ * https://github.com/hashicorp/terraform/issues/10157.
+ *
+ * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_method_response.html
+ */
+resource "aws_api_gateway_method_response" "method_response" {
+  rest_api_id = "${var.rest_api_id}"
+  resource_id = "${aws_api_gateway_resource.proxy_endpoint.id}"
+  http_method = "${aws_api_gateway_method.method.http_method}"
+  status_code = "${aws_api_gateway_integration_response.integration_response.status_code}"
+
+  response_models = {
+    "application/json" = "Empty"
+  }
 }
 
 /**
@@ -184,15 +226,6 @@ resource "aws_api_gateway_integration" "integration" {
  *       eg. arn:aws:lambda:ap-southeast-2:873114526714:function:coffeeShopMessage:dev
  *
  *       @see https://www.terraform.io/docs/providers/aws/r/api_gateway_integration.html#lambda-integration
- */
-
-
-/**
- * TODO: Do we also need to add...
- *       - aws_api_gateway_method_response?
- *       - aws_api_gateway_method_settings?
- *       - aws_api_gateway_integration_response?
- *       - aws_api_gateway_gateway_response?
  */
 
 

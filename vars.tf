@@ -2,17 +2,30 @@
  * Variables for Terraform infrastructure configuration.
  *
  * TODO: Some of these variables are defined twice - both here and in .travis.yml. Is it possible
- *       to read and use these from Travis, somehow? An alternative would be to deploy to Lambda
- *       using Terraform instead, if state was also stored remotely.
+ *       to read and use these from Travis, somehow? Even by turning this into JSON and
+ *       programmatically pull from it? An alternative would be to deploy to Lambda using Terraform
+ *       instead (if state was also stored remotely).
  *
  * @author Tim Malone <tdmalone@gmail.com>
  * @see https://www.terraform.io/intro/getting-started/variables.html
  */
 
+variable "aws_region" {
+  default = "ap-southeast-2"
+}
+
+/**
+ * Alternatively, this variable could be cut and the use of it in ./config.tf ommited, so that it
+ * can be generated randomly.
+ */
 variable "role_name" {
   default = "coffeeShopMessageLambdaRole"
 }
 
+/**
+ * Alternatively, this variable could be cut and the use of it in ./config.tf ommited, so that it
+ * can be generated randomly.
+ */
 variable "policy_name" {
   default = "coffeeShopMessageLambdaPolicy"
 }
@@ -49,10 +62,18 @@ variable "sns_queue_display_name_prod" {
   default = "GFC Coffee"
 }
 
+/**
+ * Alternatively, this hardcoding of an existing API could be removed and the API defined from
+ * scratch here.
+ */
 variable "rest_api_id" {
   default = "78qkh1lhph"
 }
 
+/**
+ * Alternatively, this hardcoding of an existing API path could be removed and the API defined from
+ * scratch here.
+ */
 variable "rest_api_parent_path_id" {
   default = "ignbcbt303"
 }
