@@ -1,130 +1,11 @@
 /**
- * Configures AWS infrastructure for running the coffee-shop-message function.
- * To use, download Terraform and run `terraform init` followed by `terraform apply`.
- *
- * To set variables, edit ./vars.tf.
+ * Configures AWS infrastructure for an API Gateway API for invoking our Lambda function.
  *
  * @author Tim Malone <tdmalone@gmail.com>
  */
 
 /**
- * AWS provider configuration, with version constraints.
- * Credentials are taken from the usual AWS environment variables.
- *
- * @see https://www.terraform.io/docs/providers/aws/index.html
- * @see https://www.terraform.io/docs/configuration/providers.html#provider-versions
- */
-provider "aws" {
-  region  = "${var.aws_region}"
-  version = "~> 1.14"
-}
-
-/**
- * IAM role for the Lambda function.
- *
- * @see https://www.terraform.io/docs/providers/aws/r/iam_role.html
- */
-resource "aws_iam_role" "role" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow"
-    }
-  ]
-}
-EOF
-}
-
-/**
- * IAM policy to allow the Lambda function to write logs, and publish to our SNS topics.
- *
- * @see https://www.terraform.io/docs/providers/aws/r/iam_role_policy.html
- */
-resource "aws_iam_role_policy" "policy" {
-  role = "${aws_iam_role.role.id}"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    },
-    {
-      "Action": [
-        "sns:Publish"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "${aws_sns_topic.sns_topic_dev.arn}",
-        "${aws_sns_topic.sns_topic_prod.arn}"
-      ]
-    }
-  ]
-}
-EOF
-}
-
-/**
- * Define the Lambda function.
- *
- * @see https://www.terraform.io/docs/providers/aws/r/lambda_function.html
- */
-resource "aws_lambda_function" "function" {
-  function_name = "${var.function_name}"
-  description   = "${var.function_description}"
-  role          = "${aws_iam_role.role.arn}"
-  handler       = "${var.function_handler}"
-  runtime       = "${var.function_runtime}"
-  timeout       = "${var.function_timeout}"
-
-  environment {
-    variables = {
-      SLACK_HOOK_DEV  = "${var.slack_hook_dev}"
-      SLACK_HOOK_PROD = "${var.slack_hook_prod}"
-      SNS_TOPIC_DEV   = "${aws_sns_topic.sns_topic_dev.arn}"
-      SNS_TOPIC_PROD  = "${aws_sns_topic.sns_topic_prod.arn}"
-    }
-  }
-}
-
-/**
- * TODO: Add function aliases (and maybe a couple of other Lambda-related resources too?)
- */
-
-/**
- * SNS topic for development purposes.
- *
- * @see https://www.terraform.io/docs/providers/aws/r/sns_topic.html
- */
-resource "aws_sns_topic" "sns_topic_dev" {
-  name = "${var.sns_queue_name_dev}"
-}
-
-/**
- * SNS topic for customers subscriptions (prod).
- *
- * @see https://www.terraform.io/docs/providers/aws/r/sns_topic.html
- */
-resource "aws_sns_topic" "sns_topic_prod" {
-  name         = "${var.sns_queue_name_prod}"
-  display_name = "${var.sns_queue_display_name_prod}"
-}
-
-/**
- * Create the API.
+ * Create the API itself.
  *
  * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_rest_api.html
  */
@@ -181,6 +62,8 @@ resource "aws_api_gateway_deployment" "api_deployment_dev" {
 /**
  * Deploy the prod stage.
  *
+ * TODO: This may need a depends_on setting to avoid a race condition, as per Terraform docs.
+ *
  * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_deployment.html
  */
 resource "aws_api_gateway_deployment" "api_deployment_prod" {
@@ -214,7 +97,7 @@ resource "aws_api_gateway_resource" "proxy_endpoint" {
 }
 
 /**
- * Endpoint method.
+ * Default endpoint HTTP method for calling.
  *
  * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_method.html
  */
@@ -239,36 +122,6 @@ resource "aws_api_gateway_integration" "integration" {
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = "arn:aws:apigateway:${var.aws_region}:lambda:path/2015-03-31/functions/${aws_lambda_function.function.arn}:$${stageVariables.lambdaAlias}/invocations"
-}
-
-/**
- * Add Lambda execution perms for the API Gateway integration (for the dev stage -> dev alias).
- *
- * TODO: Although this seems to work, it might need the source_arn property defined as well, because
- *       at the moment Terraform is trying to re-create it on each apply.
- *
- * @see https://www.terraform.io/docs/providers/aws/r/lambda_permission.html
- */
-resource "aws_lambda_permission" "permission_dev_stage" {
-  statement_id  = "AllowExecutionFromAPIGateway"
-  action        = "lambda:InvokeFunction"
-  function_name = "${aws_lambda_function.function.arn}:${var.dev_stage_alias_name}"
-  principal     = "apigateway.amazonaws.com"
-}
-
-/**
- * Add Lambda execution perms for the API Gateway integration (for the prod stage -> prod alias).
- *
- * TODO: Although this seems to work, it might need the source_arn property defined as well, because
- *       at the moment Terraform is trying to re-create it on each apply.
- *
- * @see https://www.terraform.io/docs/providers/aws/r/lambda_permission.html
- */
-resource "aws_lambda_permission" "permission_prod_stage" {
-  statement_id  = "AllowExecutionFromAPIGateway"
-  action        = "lambda:InvokeFunction"
-  function_name = "${aws_lambda_function.function.arn}:${var.prod_stage_alias_name}"
-  principal     = "apigateway.amazonaws.com"
 }
 
 /**
