@@ -122,7 +122,7 @@ resource "aws_lambda_permission" "permission_dev_stage" {
   action        = "lambda:InvokeFunction"
   function_name = "${aws_lambda_function.function.arn}:${var.dev_stage_alias_name}"
   principal     = "apigateway.amazonaws.com"
-  depends_on  = ["aws_lambda_alias.alias_dev"]
+  depends_on    = ["aws_lambda_alias.alias_dev"]
 }
 
 resource "aws_lambda_permission" "permission_prod_stage" {
@@ -130,5 +130,5 @@ resource "aws_lambda_permission" "permission_prod_stage" {
   action        = "lambda:InvokeFunction"
   function_name = "${aws_lambda_function.function.arn}:${var.prod_stage_alias_name}"
   principal     = "apigateway.amazonaws.com"
-  depends_on  = ["aws_lambda_alias.alias_prod"]
+  depends_on    = ["aws_lambda_alias.alias_prod"]
 }

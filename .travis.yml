@@ -26,16 +26,14 @@ install:
   # Install Terraform for checking infrastructure configuration.
   - curl --location https://releases.hashicorp.com/terraform/0.11.5/terraform_0.11.5_linux_amd64.zip > terraform.zip
   - unzip terraform.zip
+  - terraform() { "${TRAVIS_BUILD_DIR}/terraform" "$@"; }
 
 script:
 
-  - yarn lint
-  - yarn test
-
   # Check that Terraform config files are formatted correctly and that they validate.
-  - ./terraform fmt -check
-  - ./terraform init
-  - ./terraform validate
+  - terraform fmt -check infrastructure/
+  - terraform init infrastructure/
+  - terraform validate infrastructure/
 
   # If state is stored remotely, we can also check that the state is up-to-date - i.e. that no
   # changes have been pushed without being applied.
@@ -46,16 +44,7 @@ script:
   # THIS SHOULD BE COMMENTED OUT IF STATE IS MANAGED LOCALLY, WHICH IS THE DEFAULT IN TERRAFORM.
   # FOR SECURITY REASONS, STATE SHOULD NEVER BE COMMITTED TO THE REPOSITORY.
   #
-  - ./terraform plan -detailed-exitcode > /dev/null
-
-before_deploy:
-
-  # Remove the AWS SDK as it's already available in the Lambda environment.
-  - yarn remove aws-sdk
-
-  # Clean up dependencies + unneeded files, and reinstall production dependencies only.
-  - rm -rf coverage node_modules tests .*rc.js
-  - yarn --prod
+  - terraform plan -detailed-exitcode infrastructure/ > /dev/null
 
   # Get key info from Terraform variables.
   # TODO: Some of this is still set manually here while we transition across to Terraform managed infrastructure.
@@ -75,6 +64,16 @@ before_deploy:
   - IFS=. read LAMBDA_MODULE LAMBDA_HANDLER <<< "${TF_OUTPUT_HANDLER##*-}"
 
   - SNS_TOPIC_DEV=arn:aws:sns:ap-southeast-2:873114526714:tim-dev-queue
+
+  # Linting and testing.
+  - yarn lint
+  - yarn test
+
+before_deploy:
+
+  # Clean up dependencies + unneeded files, and reinstall production dependencies only.
+  - rm -rf coverage infrastructure node_modules tests .*rc.js
+  - yarn --prod
 
 deploy:
 
