@@ -6,19 +6,6 @@ env:
   global:
 
     - AWS_ACCESS_KEY_ID=AKIAJNPBZJSUNV7GJSVQ
-    - AWS_DEFAULT_REGION=ap-southeast-2
-
-    - LAMBDA_NAME=coffeeShopMessage
-    - LAMBDA_DESCRIPTION="Sends Slack and SNS messages when The Good Food Collective is closing for the day."
-    - LAMBDA_TIMEOUT=15
-    - LAMBDA_ROLE=arn:aws:iam::873114526714:role/genericLambdaRole
-    - LAMBDA_ALIAS=prod
-
-    - LAMBDA_RUNTIME=nodejs6.10
-    - LAMBDA_MODULE=index
-    - LAMBDA_HANDLER=handler
-
-    - SNS_TOPIC_DEV=arn:aws:sns:ap-southeast-2:873114526714:tim-dev-queue
 
     # SLACK_HOOK_DEV
     - secure: fFs+/eD3LREWOpL/ItKheCN2OS51drZXk0txCCpS3k18okGm3X4Mz5MD7FxTRS6+VyN1h7wzXaBBCWHozcJwTqIFGEEagXjNRjoDaZFQLxY1wf+uZ1bV1zN5XtSFrFCXXWL6BhihsYp3B2j6z2HUfIUMG88Jj7dVBG8dWuVAEUHBLhU7wf3R5Q8QIhvRsyCS0HVYNBkpb1nt8FZtGpoaRalx+sYoeVR731pZa5N19GdCfnqtn0Pp/oAXsFuL60WOA6/iMU3vzh/Uj1phBTGHL7YtBr+HXziwCf0iLdxorA3A4twZQZHLWUYMHySB2G0+FaX5dSAy6Qn1luQTYADVW5iskccTTvKEOu4uXfUMFj3SDOibCrWKlIZtl+oWDsM6583EmmVB4oBGE8lQv9YRTWF8R6M/7GKJcuY6SO1eVWcUpg82gg0iShiOdOrXpSItCTpq4q2jqOfWWF+xKJARG+1Q7viNeQvkz4JVDrNx9SGJe8E01IA+pBvUU0z7lvL9cTy2obmVd0UkIFmMYvfl2TVlPNVCOR1BV56YYP4YQ64jIGvtIVE9H1oT3jrTHJmpm/ozxzBeteBU2jJomz0LnN/IT3mneRfzNlx+LpDBhdAoaidjh1aywpLMw7EhtAgAQb/gdC1Cr3EORoaky5HEagYWRWEz8/mdYbY/3qwrBWU=
@@ -59,7 +46,7 @@ script:
   # THIS SHOULD BE COMMENTED OUT IF STATE IS MANAGED LOCALLY, WHICH IS THE DEFAULT IN TERRAFORM.
   # FOR SECURITY REASONS, STATE SHOULD NEVER BE COMMITTED TO THE REPOSITORY.
   #
-  #- ./terraform plan -detailed-exitcode > /dev/null
+  - ./terraform plan -detailed-exitcode > /dev/null
 
 before_deploy:
 
@@ -69,6 +56,25 @@ before_deploy:
   # Clean up dependencies + unneeded files, and reinstall production dependencies only.
   - rm -rf coverage node_modules tests .*rc.js
   - yarn --prod
+
+  # Get key info from Terraform variables.
+  # TODO: Some of this is still set manually here while we transition across to Terraform managed infrastructure.
+
+  - AWS_DEFAULT_REGION="$( terraform output aws_region )"
+
+  - LAMBDA_NAME=coffeeShopMessage
+  - LAMBDA_DESCRIPTION="$( terraform output function_description )"
+  - LAMBDA_TIMEOUT="$( terraform output function_timeout )"
+  - LAMBDA_ROLE=arn:aws:iam::873114526714:role/genericLambdaRole
+  - LAMBDA_ALIAS="$( terraform output function_alias )"
+  - LAMBDA_RUNTIME="$( terraform output prod_stage_alias_name )"
+
+  # Split the handler into two variables for Travis deployment.
+  # @see https://stackoverflow.com/a/19915925/1982136
+  - TF_OUTPUT_HANDLER="$( terraform output function_handler )"
+  - IFS=. read LAMBDA_MODULE LAMBDA_HANDLER <<< "${TF_OUTPUT_HANDLER##*-}"
+
+  - SNS_TOPIC_DEV=arn:aws:sns:ap-southeast-2:873114526714:tim-dev-queue
 
 deploy:
 

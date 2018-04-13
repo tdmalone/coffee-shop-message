@@ -1,10 +1,7 @@
 /**
  * Variables for Terraform infrastructure configuration.
  *
- * TODO: Some of these variables are defined twice - both here and in .travis.yml. Is it possible
- *       to read and use these from Travis, somehow? Even by turning this into JSON and
- *       programmatically pull from it? An alternative would be to deploy to Lambda using Terraform
- *       instead (if state was also stored remotely).
+ * TODO: Add descriptions to many of these variables to assist with usage.
  *
  * @author Tim Malone <tdmalone@gmail.com>
  * @see https://www.terraform.io/intro/getting-started/variables.html
