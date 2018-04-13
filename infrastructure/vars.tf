@@ -7,10 +7,6 @@
  * @see https://www.terraform.io/intro/getting-started/variables.html
  */
 
-variable "aws_region" {
-  default = "ap-southeast-2"
-}
-
 variable "api_name" {
   default = "coffee-shop-message"
 }

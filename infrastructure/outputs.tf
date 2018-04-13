@@ -21,9 +21,6 @@ output "api_invoke_url_dev" {
 /**
  * The following are utilised in ../.travis.yml so we don't have to redefine the variables again.
  */
-output "aws_region" {
-  value = "${var.aws_region}"
-}
 
 output "function_name" {
   value = "${var.function_name}"

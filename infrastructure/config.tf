@@ -63,12 +63,19 @@ resource "aws_dynamodb_table" "state" {
 
 /**
  * AWS provider configuration, with version constraints.
- * Credentials are taken from the usual AWS environment variables.
+ * Credentials are taken from the usual AWS authentication methods such as environment variables.
  *
  * @see https://www.terraform.io/docs/providers/aws/index.html
  * @see https://www.terraform.io/docs/configuration/providers.html#provider-versions
  */
 provider "aws" {
-  region  = "${var.aws_region}"
   version = "~> 1.14"
 }
+
+/**
+ * Make the current AWS region accessible as a data attribute.
+ *
+ * @see https://www.terraform.io/docs/providers/aws/d/region.html
+ * @see https://www.terraform.io/docs/configuration/data-sources.html
+ */
+data "aws_region" "current" {}
