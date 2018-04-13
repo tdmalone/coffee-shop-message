@@ -7,3 +7,4 @@ package-lock.json
 *.tfstate
 *.tfstate.*
 *.tfvars
+*.zip

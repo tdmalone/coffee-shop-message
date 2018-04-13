@@ -16,6 +16,8 @@ resource "aws_lambda_function" "function" {
   handler       = "${var.function_handler}"
   runtime       = "${var.function_runtime}"
   timeout       = "${var.function_timeout}"
+  publish       = true
+  filename      = "../function.zip"             # Created by running `yarn bootstrap`.
 
   environment {
     variables = {
