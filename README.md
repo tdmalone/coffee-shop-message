@@ -8,6 +8,16 @@ Like all good cafes they open early, and sometimes close early - particularly wh
 
 ![The message as seen in our coffee-specific Slack channel](slack-screenshot.png?raw=true "The message as seen in our coffee-specific Slack channel")
 
+## Setup
+
+To install locally:
+
+    yarn
+
+As input is required to run the function, the easiest way to see it in action is to run the **integration tests** documented below.
+
+To install on [AWS](https://aws.amazon.com/) using [Terraform](https://www.terraform.io), see [infrastructure/](infrastructure/README.md).
+
 ## Tests
 
 To run all tests at once:
