@@ -14,7 +14,7 @@ resource "aws_api_gateway_rest_api" "api" {
 }
 
 /**
- * API's dev stage, for testing purposes.
+ * API stages, to separate dev/testing and production.
  *
  * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_stage.html
  */
@@ -28,11 +28,6 @@ resource "aws_api_gateway_stage" "stage_dev" {
   }
 }
 
-/**
- * API's production stage.
- *
- * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_stage.html
- */
 resource "aws_api_gateway_stage" "stage_prod" {
   stage_name    = "${var.prod_stage_alias_name}"
   rest_api_id   = "${aws_api_gateway_rest_api.api.id}"
@@ -50,25 +45,23 @@ resource "aws_api_gateway_stage" "stage_prod" {
  */
 
 /**
- * Deploy the dev stage.
+ * Deployments to get each stage started.
+ *
+ * Due to AWS API documentation confusion, the stage_name is intentionally blank here.
+ * https://github.com/terraform-providers/terraform-provider-aws/issues/2918#issuecomment-356684239
  *
  * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_deployment.html
  */
 resource "aws_api_gateway_deployment" "api_deployment_dev" {
   rest_api_id = "${aws_api_gateway_rest_api.api.id}"
-  stage_name  = "${var.dev_stage_alias_name}"
+  stage_name  = ""
+  depends_on  = ["aws_api_gateway_integration.integration"]
 }
 
-/**
- * Deploy the prod stage.
- *
- * TODO: This may need a depends_on setting to avoid a race condition, as per Terraform docs.
- *
- * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_deployment.html
- */
 resource "aws_api_gateway_deployment" "api_deployment_prod" {
   rest_api_id = "${aws_api_gateway_rest_api.api.id}"
-  stage_name  = "${var.prod_stage_alias_name}"
+  stage_name  = ""
+  depends_on  = ["aws_api_gateway_integration.integration"]
 }
 
 /**
@@ -98,6 +91,8 @@ resource "aws_api_gateway_resource" "proxy_endpoint" {
 
 /**
  * Default endpoint HTTP method for calling.
+ *
+ * TODO: Configure an API key for this method.
  *
  * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_method.html
  */
@@ -139,6 +134,7 @@ resource "aws_api_gateway_integration_response" "integration_response" {
   resource_id = "${aws_api_gateway_resource.proxy_endpoint.id}"
   http_method = "${aws_api_gateway_method.method.http_method}"
   status_code = 200
+  depends_on  = ["aws_api_gateway_integration.integration"]
 
   response_templates = {
     "application/json" = ""

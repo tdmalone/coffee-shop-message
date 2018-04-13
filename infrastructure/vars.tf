@@ -15,11 +15,11 @@ variable "aws_region" {
 }
 
 variable "api_name" {
-  default = "coffeeShopMessage"
+  default = "coffee-shop-message"
 }
 
 variable "function_name" {
-  default = "coffeeShopMessage"
+  default = "coffee-shop-message"
 }
 
 variable "function_description" {
@@ -39,11 +39,11 @@ variable "function_timeout" {
 }
 
 variable "sns_queue_name_dev" {
-  default = "tim-dev-queue"
+  default = "coffee-shop-message-dev"
 }
 
 variable "sns_queue_name_prod" {
-  default = "coffee-shop-message"
+  default = "coffee-shop-message-prod"
 }
 
 variable "sns_queue_display_name_prod" {
@@ -53,6 +53,20 @@ variable "sns_queue_display_name_prod" {
 variable "rest_api_path" {
   default = "coffee"
 }
+
+/**
+ * The following variables should be set elsewhere for security reasons, eg. on the command line,
+ * in a .tfvars file, or as environment variables.
+ *
+ * For example:
+ * $ export TF_VAR_slack_hook_dev="TXXXXXXXX/BXXXXXXXX/xxxxxxxxxxxxxxxxxxxxxxxx"
+ * $ export TF_VAR_slack_hook_prod="TXXXXXXXX/BXXXXXXXX/xxxxxxxxxxxxxxxxxxxxxxxx"
+ *
+ * @see https://www.terraform.io/intro/getting-started/variables.html#assigning-variables
+ */
+
+variable "slack_hook_dev" {}
+variable "slack_hook_prod" {}
 
 /**
  * The following stage variables are used to refer both to the API stages and to the Lambda aliases
@@ -70,13 +84,3 @@ variable "dev_stage_alias_name" {
 variable "prod_stage_alias_name" {
   default = "prod"
 }
-
-/**
- * The following variables should be set elsewhere for security reasons, eg. on the command line,
- * in a .tfvars file, or as environment variables.
- *
- * @see https://www.terraform.io/intro/getting-started/variables.html#assigning-variables
- */
-
-variable "slack_hook_dev" {}
-variable "slack_hook_prod" {}

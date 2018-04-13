@@ -28,8 +28,25 @@ resource "aws_lambda_function" "function" {
 }
 
 /**
- * TODO: Add function aliases (and maybe a couple of other Lambda-related resources too?)
+ * Lambda aliases, to allow us to test changes without modifying the production version.
+ * These will be mapped to API stages by ./api.tf.
+ *
+ * Subsequent deployments should be managed through Travis CI, as our configuration for that will
+ * deploy and link new versions as appropriate.
+ *
+ * @see https://www.terraform.io/docs/providers/aws/r/lambda_alias.html
  */
+resource "aws_lambda_alias" "alias_dev" {
+  name             = "${var.dev_stage_alias_name}"
+  function_name    = "${aws_lambda_function.function.arn}"
+  function_version = "$LATEST"
+}
+
+resource "aws_lambda_alias" "alias_prod" {
+  name             = "${var.prod_stage_alias_name}"
+  function_name    = "${aws_lambda_function.function.arn}"
+  function_version = "${aws_lambda_function.function.version}"
+}
 
 /**
  * IAM role for the Lambda function.
@@ -90,10 +107,11 @@ EOF
 }
 
 /**
- * Add Lambda execution perms for the API Gateway integration (for the dev stage -> dev alias).
+ * Lambda execution perms for the API Gateway integration (for the dev stage -> dev alias and prod
+ * stage -> prod alias).
  *
- * TODO: Although this seems to work, it might need the source_arn property defined as well, because
- *       at the moment Terraform is trying to re-create it on each apply.
+ * TODO: Although these seem to work, they might need the `source_arn` property defined as well,
+ *       because at the moment Terraform is trying to re-create them each time it is run.
  *
  * @see https://www.terraform.io/docs/providers/aws/r/lambda_permission.html
  */
@@ -102,19 +120,13 @@ resource "aws_lambda_permission" "permission_dev_stage" {
   action        = "lambda:InvokeFunction"
   function_name = "${aws_lambda_function.function.arn}:${var.dev_stage_alias_name}"
   principal     = "apigateway.amazonaws.com"
+  depends_on  = ["aws_lambda_alias.alias_dev"]
 }
 
-/**
- * Add Lambda execution perms for the API Gateway integration (for the prod stage -> prod alias).
- *
- * TODO: Although this seems to work, it might need the source_arn property defined as well, because
- *       at the moment Terraform is trying to re-create it on each apply.
- *
- * @see https://www.terraform.io/docs/providers/aws/r/lambda_permission.html
- */
 resource "aws_lambda_permission" "permission_prod_stage" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
   function_name = "${aws_lambda_function.function.arn}:${var.prod_stage_alias_name}"
   principal     = "apigateway.amazonaws.com"
+  depends_on  = ["aws_lambda_alias.alias_prod"]
 }
