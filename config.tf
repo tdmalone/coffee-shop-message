@@ -25,8 +25,6 @@ provider "aws" {
  * @see https://www.terraform.io/docs/providers/aws/r/iam_role.html
  */
 resource "aws_iam_role" "role" {
-  name = "${var.role_name}"
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -49,7 +47,6 @@ EOF
  * @see https://www.terraform.io/docs/providers/aws/r/iam_role_policy.html
  */
 resource "aws_iam_role_policy" "policy" {
-  name = "${var.policy_name}"
   role = "${aws_iam_role.role.id}"
 
   policy = <<EOF
@@ -104,7 +101,7 @@ resource "aws_lambda_function" "function" {
 }
 
 /**
- * TODO: Add function aliases (and maybe a couple of other resources too?)
+ * TODO: Add function aliases (and maybe a couple of other Lambda-related resources too?)
  */
 
 /**
@@ -127,13 +124,78 @@ resource "aws_sns_topic" "sns_topic_prod" {
 }
 
 /**
+ * Create the API.
+ *
+ * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_rest_api.html
+ */
+resource "aws_api_gateway_rest_api" "api" {
+  name = "${var.api_name}"
+}
+
+/**
+ * API's dev stage, for testing purposes.
+ *
+ * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_stage.html
+ */
+resource "aws_api_gateway_stage" "stage_dev" {
+  stage_name    = "${var.dev_stage_alias_name}"
+  rest_api_id   = "${aws_api_gateway_rest_api.api.id}"
+  deployment_id = "${aws_api_gateway_deployment.api_deployment_dev.id}"
+
+  variables = {
+    lambdaAlias = "${var.dev_stage_alias_name}"
+  }
+}
+
+/**
+ * API's production stage.
+ *
+ * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_stage.html
+ */
+resource "aws_api_gateway_stage" "stage_prod" {
+  stage_name    = "${var.prod_stage_alias_name}"
+  rest_api_id   = "${aws_api_gateway_rest_api.api.id}"
+  deployment_id = "${aws_api_gateway_deployment.api_deployment_prod.id}"
+
+  variables = {
+    lambdaAlias = "${var.prod_stage_alias_name}"
+  }
+}
+
+/**
+ * TODO: Switch on logging for the dev and prod stages.
+ *       As Terraform's AWS provider does not support this yet, we may need a workaround:
+ *       @see https://github.com/terraform-providers/terraform-provider-aws/issues/2406#issuecomment-347645154
+ */
+
+/**
+ * Deploy the dev stage.
+ *
+ * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_deployment.html
+ */
+resource "aws_api_gateway_deployment" "api_deployment_dev" {
+  rest_api_id = "${aws_api_gateway_rest_api.api.id}"
+  stage_name  = "${var.dev_stage_alias_name}"
+}
+
+/**
+ * Deploy the prod stage.
+ *
+ * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_deployment.html
+ */
+resource "aws_api_gateway_deployment" "api_deployment_prod" {
+  rest_api_id = "${aws_api_gateway_rest_api.api.id}"
+  stage_name  = "${var.prod_stage_alias_name}"
+}
+
+/**
  * Main endpoint for the API into the function.
  *
  * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_resource.html
  */
 resource "aws_api_gateway_resource" "main_endpoint" {
-  rest_api_id = "${var.rest_api_id}"
-  parent_id   = "${var.rest_api_parent_path_id}"
+  rest_api_id = "${aws_api_gateway_rest_api.api.id}"
+  parent_id   = "${aws_api_gateway_rest_api.api.root_resource_id}"
   path_part   = "${var.rest_api_path}"
 }
 
@@ -146,7 +208,7 @@ resource "aws_api_gateway_resource" "main_endpoint" {
  * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_resource.html
  */
 resource "aws_api_gateway_resource" "proxy_endpoint" {
-  rest_api_id = "${var.rest_api_id}"
+  rest_api_id = "${aws_api_gateway_rest_api.api.id}"
   parent_id   = "${aws_api_gateway_resource.main_endpoint.id}"
   path_part   = "{proxy+}"
 }
@@ -157,7 +219,7 @@ resource "aws_api_gateway_resource" "proxy_endpoint" {
  * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_method.html
  */
 resource "aws_api_gateway_method" "method" {
-  rest_api_id   = "${var.rest_api_id}"
+  rest_api_id   = "${aws_api_gateway_rest_api.api.id}"
   resource_id   = "${aws_api_gateway_resource.proxy_endpoint.id}"
   http_method   = "POST"
   authorization = "NONE"
@@ -171,7 +233,7 @@ resource "aws_api_gateway_method" "method" {
  * @see https://github.com/hashicorp/terraform/issues/6463#issuecomment-293010256
  */
 resource "aws_api_gateway_integration" "integration" {
-  rest_api_id             = "${var.rest_api_id}"
+  rest_api_id             = "${aws_api_gateway_rest_api.api.id}"
   resource_id             = "${aws_api_gateway_resource.proxy_endpoint.id}"
   http_method             = "${aws_api_gateway_method.method.http_method}"
   integration_http_method = "POST"
@@ -220,7 +282,7 @@ resource "aws_lambda_permission" "permission_prod_stage" {
  * @see https://github.com/hashicorp/terraform/issues/10157
  */
 resource "aws_api_gateway_integration_response" "integration_response" {
-  rest_api_id = "${var.rest_api_id}"
+  rest_api_id = "${aws_api_gateway_rest_api.api.id}"
   resource_id = "${aws_api_gateway_resource.proxy_endpoint.id}"
   http_method = "${aws_api_gateway_method.method.http_method}"
   status_code = 200
@@ -240,7 +302,7 @@ resource "aws_api_gateway_integration_response" "integration_response" {
  * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_method_response.html
  */
 resource "aws_api_gateway_method_response" "method_response" {
-  rest_api_id = "${var.rest_api_id}"
+  rest_api_id = "${aws_api_gateway_rest_api.api.id}"
   resource_id = "${aws_api_gateway_resource.proxy_endpoint.id}"
   http_method = "${aws_api_gateway_method.method.http_method}"
   status_code = "${aws_api_gateway_integration_response.integration_response.status_code}"
@@ -249,11 +311,3 @@ resource "aws_api_gateway_method_response" "method_response" {
     "application/json" = "Empty"
   }
 }
-
-/**
- * TODO: Consider also adding...
- *       - aws_api_gateway_rest_api?
- *       - aws_api_gateway_stage?
- *       - aws_api_gateway_deployment?
- */
-

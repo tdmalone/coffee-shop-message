@@ -14,8 +14,8 @@ variable "aws_region" {
   default = "ap-southeast-2"
 }
 
-variable "aws_account_id" {
-  default = "873114526714"
+variable "api_name" {
+  default = "coffeeShopMessage"
 }
 
 variable "function_name" {
@@ -51,7 +51,7 @@ variable "sns_queue_display_name_prod" {
 }
 
 variable "rest_api_path" {
-  default = "coffee-test"
+  default = "coffee"
 }
 
 /**
@@ -69,30 +69,6 @@ variable "dev_stage_alias_name" {
 
 variable "prod_stage_alias_name" {
   default = "prod"
-}
-
-/**
- * Alternatively, the following hardcoding of an existing API could be removed and the API defined
- * from scratch in Terraform instead.
- */
-variable "rest_api_id" {
-  default = "78qkh1lhph"
-}
-
-variable "rest_api_parent_path_id" {
-  default = "ignbcbt303"
-}
-
-/**
- * Alternatively, the following variables could be cut and the use of them in ./config.tf ommited,
- * so that they can be generated randomly.
- */
-variable "role_name" {
-  default = "coffeeShopMessageLambdaRole"
-}
-
-variable "policy_name" {
-  default = "coffeeShopMessageLambdaPolicy"
 }
 
 /**
