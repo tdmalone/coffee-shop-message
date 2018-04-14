@@ -14,8 +14,24 @@ output "sns_topic_dev" {
   value = "${aws_sns_topic.sns_topic_dev.arn}"
 }
 
+/**
+ * The following are utilised in ./README.md's instructions.
+ */
+
 output "api_invoke_url_dev" {
-  value = "${aws_api_gateway_deployment.api_deployment_dev.invoke_url}${var.dev_stage_alias_name}/${var.rest_api_path}"
+  value = "${aws_api_gateway_deployment.dev.invoke_url}${var.dev_stage_alias_name}/${var.rest_api_path}"
+}
+
+output "api_key" {
+  value = "${aws_api_gateway_api_key.default.value}"
+}
+
+output "access_key_id" {
+  value = "${aws_iam_access_key.travis_user.id}"
+}
+
+output "secret_access_key" {
+  value = "${aws_iam_access_key.travis_user.secret}"
 }
 
 /**

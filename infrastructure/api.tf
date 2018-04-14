@@ -18,20 +18,20 @@ resource "aws_api_gateway_rest_api" "api" {
  *
  * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_stage.html
  */
-resource "aws_api_gateway_stage" "stage_dev" {
+resource "aws_api_gateway_stage" "dev" {
   stage_name    = "${var.dev_stage_alias_name}"
   rest_api_id   = "${aws_api_gateway_rest_api.api.id}"
-  deployment_id = "${aws_api_gateway_deployment.api_deployment_dev.id}"
+  deployment_id = "${aws_api_gateway_deployment.dev.id}"
 
   variables = {
     lambdaAlias = "${var.dev_stage_alias_name}"
   }
 }
 
-resource "aws_api_gateway_stage" "stage_prod" {
+resource "aws_api_gateway_stage" "prod" {
   stage_name    = "${var.prod_stage_alias_name}"
   rest_api_id   = "${aws_api_gateway_rest_api.api.id}"
-  deployment_id = "${aws_api_gateway_deployment.api_deployment_prod.id}"
+  deployment_id = "${aws_api_gateway_deployment.prod.id}"
 
   variables = {
     lambdaAlias = "${var.prod_stage_alias_name}"
@@ -52,13 +52,13 @@ resource "aws_api_gateway_stage" "stage_prod" {
  *
  * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_deployment.html
  */
-resource "aws_api_gateway_deployment" "api_deployment_dev" {
+resource "aws_api_gateway_deployment" "dev" {
   rest_api_id = "${aws_api_gateway_rest_api.api.id}"
   stage_name  = ""
   depends_on  = ["aws_api_gateway_integration.integration"]
 }
 
-resource "aws_api_gateway_deployment" "api_deployment_prod" {
+resource "aws_api_gateway_deployment" "prod" {
   rest_api_id = "${aws_api_gateway_rest_api.api.id}"
   stage_name  = ""
   depends_on  = ["aws_api_gateway_integration.integration"]
@@ -92,15 +92,14 @@ resource "aws_api_gateway_resource" "proxy_endpoint" {
 /**
  * Default endpoint HTTP method for calling.
  *
- * TODO: Configure an API key for this method.
- *
  * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_method.html
  */
 resource "aws_api_gateway_method" "method" {
-  rest_api_id   = "${aws_api_gateway_rest_api.api.id}"
-  resource_id   = "${aws_api_gateway_resource.proxy_endpoint.id}"
-  http_method   = "POST"
-  authorization = "NONE"
+  rest_api_id      = "${aws_api_gateway_rest_api.api.id}"
+  resource_id      = "${aws_api_gateway_resource.proxy_endpoint.id}"
+  http_method      = "POST"
+  authorization    = "NONE"
+  api_key_required = true
 }
 
 /**
@@ -159,4 +158,45 @@ resource "aws_api_gateway_method_response" "method_response" {
   response_models = {
     "application/json" = "Empty"
   }
+}
+
+/**
+ * API key and usage plans.
+ *
+ * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_api_key.html
+ * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_usage_plan.html
+ * @see https://www.terraform.io/docs/providers/aws/r/api_gateway_usage_plan_key.html
+ */
+resource "aws_api_gateway_api_key" "default" {
+  name = "coffee-shop-message-default"
+}
+
+resource "aws_api_gateway_usage_plan" "default" {
+  name = "coffee-shop-message-default"
+
+  api_stages {
+    api_id = "${aws_api_gateway_rest_api.api.id}"
+    stage  = "${var.dev_stage_alias_name}"
+  }
+
+  api_stages {
+    api_id = "${aws_api_gateway_rest_api.api.id}"
+    stage  = "${var.prod_stage_alias_name}"
+  }
+
+  quota_settings {
+    limit  = 20
+    period = "DAY"
+  }
+
+  throttle_settings {
+    burst_limit = 5
+    rate_limit  = 10
+  }
+}
+
+resource "aws_api_gateway_usage_plan_key" "default" {
+  key_id        = "${aws_api_gateway_api_key.default.id}"
+  key_type      = "API_KEY"
+  usage_plan_id = "${aws_api_gateway_usage_plan.default.id}"
 }
