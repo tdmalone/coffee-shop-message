@@ -53,18 +53,17 @@ script:
   - terraform plan -detailed-exitcode -lock=false infrastructure/ > /dev/null
 
   # Get key info from Terraform variables.
-  # TODO: Some of this is still set manually here while we transition across to Terraform managed infrastructure.
-  - export LAMBDA_NAME=coffeeShopMessage
-  - export LAMBDA_DESCRIPTION="$( terraform output function_description )"
-  - export LAMBDA_TIMEOUT="$( terraform output function_timeout )"
-  - export LAMBDA_ROLE=arn:aws:iam::873114526714:role/genericLambdaRole
-  - export LAMBDA_ALIAS="$( terraform output function_alias )"
-  - export LAMBDA_RUNTIME="$( terraform output prod_stage_alias_name )"
-  - export SNS_TOPIC_DEV=arn:aws:sns:ap-southeast-2:873114526714:tim-dev-queue
+  - export LAMBDA_NAME="$( cd infrastructure && terraform output function_name )"
+  - export LAMBDA_DESCRIPTION="$( cd infrastructure && terraform output function_description )"
+  - export LAMBDA_TIMEOUT="$( cd infrastructure && terraform output function_timeout )"
+  - export LAMBDA_ROLE="$( cd infrastructure && terraform output function_role )"
+  - export LAMBDA_ALIAS="$( cd infrastructure && terraform output function_alias )"
+  - export LAMBDA_RUNTIME="$( cd infrastructure && terraform output function_runtime )"
+  - export SNS_TOPIC_DEV="$( cd infrastructure && terraform output sns_topic_dev )"
 
   # Split the handler into two variables for Travis deployment.
   # @see https://stackoverflow.com/a/19915925/1982136
-  - TF_OUTPUT_HANDLER="$( terraform output function_handler )"
+  - TF_OUTPUT_HANDLER="$( cd infrastructure && terraform output function_handler )"
   - IFS=. read LAMBDA_MODULE LAMBDA_HANDLER <<< "${TF_OUTPUT_HANDLER##*-}"
   - export LAMBDA_MODULE && export LAMBDA_HANDLER
 
