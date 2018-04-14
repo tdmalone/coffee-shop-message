@@ -6,12 +6,17 @@
  */
 
 /**
- * Create the IAM user that we'll use within Travis.
+ * Create the IAM user and access keys that we'll use within Travis.
  *
  * @see https://www.terraform.io/docs/providers/aws/r/iam_user.html
+ * @see https://www.terraform.io/docs/providers/aws/r/iam_access_key.html
  */
 resource "aws_iam_user" "travis_user" {
   name = "travis-ci-coffee-shop-message"
+}
+
+resource "aws_iam_access_key" "travis_user" {
+  user = "${aws_iam_user.travis_user.name}"
 }
 
 /**

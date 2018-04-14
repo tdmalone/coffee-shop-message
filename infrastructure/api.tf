@@ -39,10 +39,38 @@ resource "aws_api_gateway_stage" "prod" {
 }
 
 /**
- * TODO: Switch on logging for the dev and prod stages.
- *       As Terraform's AWS provider does not support this yet, we may need a workaround:
- *       @see https://github.com/terraform-providers/terraform-provider-aws/issues/2406#issuecomment-347645154
+ * Switch on logging for the dev and prod stages.
+ * As Terraform's AWS provider does not support this yet, we use a workaround.
+ *
+ * TODO: Need to add normal CloudWatch logs + metrics options to this too.
+ *
+ * @see https://github.com/terraform-providers/terraform-provider-aws/issues/2406#issuecomment-347645154
+ * @see https://www.terraform.io/docs/provisioners/null_resource.html
+ * @see https://www.terraform.io/docs/provisioners/local-exec.html
+ * @see https://www.terraform.io/docs/providers/aws/r/cloudwatch_log_group.html
  */
+resource "null_resource" "logging" {
+  depends_on = ["aws_cloudwatch_log_group.default"]
+
+  triggers {
+    log_group = "${aws_cloudwatch_log_group.default.arn}"
+  }
+
+  provisioner "local-exec" {
+    command = "aws apigateway update-stage --rest-api-id ${aws_api_gateway_deployment.dev.rest_api_id} --stage-name ${var.dev_stage_alias_name} --patch-operations op=replace,path=/accessLogSettings/destinationArn,value=${replace(aws_cloudwatch_log_group.default.arn, ":*", "")}"
+  }
+
+  provisioner "local-exec" {
+    command = "aws apigateway update-stage --rest-api-id ${aws_api_gateway_deployment.dev.rest_api_id} --stage-name ${var.dev_stage_alias_name} --patch-operations 'op=replace,path=/accessLogSettings/format,value=${jsonencode("$context.identity.sourceIp $context.identity.caller $context.identity.user [$context.requestTime] \"$context.httpMethod $context.resourcePath $context.protocol\" $context.status $context.responseLength $context.requestId")}'"
+  }
+
+  provisioner "local-exec" {
+    when    = "destroy"
+    command = "aws apigateway update-stage --rest-api-id ${aws_api_gateway_deployment.dev.rest_api_id} --stage-name ${var.dev_stage_alias_name} --patch-operations op=remove,path=/accessLogSettings,value="
+  }
+}
+
+resource "aws_cloudwatch_log_group" "default" {}
 
 /**
  * Deployments to get each stage started.

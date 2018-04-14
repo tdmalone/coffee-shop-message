@@ -110,9 +110,6 @@ EOF
  * Lambda execution perms for the API Gateway integration (for the dev stage -> dev alias and prod
  * stage -> prod alias).
  *
- * TODO: Although these seem to work, they might need the `source_arn` property defined as well,
- *       because at the moment Terraform is trying to re-create them each time it is run.
- *
  * @see https://www.terraform.io/docs/providers/aws/r/lambda_permission.html
  */
 resource "aws_lambda_permission" "permission_dev_stage" {
