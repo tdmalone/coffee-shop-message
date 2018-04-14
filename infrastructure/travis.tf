@@ -148,8 +148,10 @@ EOF
 variable "iam_policy_name_read_only_resources" {
   default = "coffee_shop_message_read_only_resource_access"
 }
+
 resource "aws_iam_policy" "read_only_resources" {
-  name   = "${var.iam_policy_name_read_only_resources}"
+  name = "${var.iam_policy_name_read_only_resources}"
+
   policy = <<EOF
 {
   "Version": "2012-10-17",

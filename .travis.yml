@@ -38,8 +38,8 @@ script:
   - export TF_VAR_slack_hook_dev="${SLACK_HOOK_DEV}"
   - export TF_VAR_slack_hook_prod="${SLACK_HOOK_PROD}"
   - terraform fmt -check infrastructure/
-  - terraform init infrastructure/
-  - terraform validate infrastructure/
+  - ( cd infrastructure && terraform init -input=false -lock=false )
+  - ( cd infrastructure && terraform validate )
 
   # If state is stored remotely, we can also check that the state is up-to-date - i.e. that no
   # changes have been pushed without being applied.
