@@ -11,6 +11,9 @@ env:
     # SLACK_HOOK_DEV
     - secure: fFs+/eD3LREWOpL/ItKheCN2OS51drZXk0txCCpS3k18okGm3X4Mz5MD7FxTRS6+VyN1h7wzXaBBCWHozcJwTqIFGEEagXjNRjoDaZFQLxY1wf+uZ1bV1zN5XtSFrFCXXWL6BhihsYp3B2j6z2HUfIUMG88Jj7dVBG8dWuVAEUHBLhU7wf3R5Q8QIhvRsyCS0HVYNBkpb1nt8FZtGpoaRalx+sYoeVR731pZa5N19GdCfnqtn0Pp/oAXsFuL60WOA6/iMU3vzh/Uj1phBTGHL7YtBr+HXziwCf0iLdxorA3A4twZQZHLWUYMHySB2G0+FaX5dSAy6Qn1luQTYADVW5iskccTTvKEOu4uXfUMFj3SDOibCrWKlIZtl+oWDsM6583EmmVB4oBGE8lQv9YRTWF8R6M/7GKJcuY6SO1eVWcUpg82gg0iShiOdOrXpSItCTpq4q2jqOfWWF+xKJARG+1Q7viNeQvkz4JVDrNx9SGJe8E01IA+pBvUU0z7lvL9cTy2obmVd0UkIFmMYvfl2TVlPNVCOR1BV56YYP4YQ64jIGvtIVE9H1oT3jrTHJmpm/ozxzBeteBU2jJomz0LnN/IT3mneRfzNlx+LpDBhdAoaidjh1aywpLMw7EhtAgAQb/gdC1Cr3EORoaky5HEagYWRWEz8/mdYbY/3qwrBWU=
 
+    # SLACK_HOOK_PROD
+    - secure: ewvN1Q96mZt/iR+jnTkZCyxWIMPWhzgQvCNwlvQZhfw1MrPN8tyKy4w60injpU4yktZs+QxSZaCEYgEWoZipsUx2+BJ8QknRI2lFLo9ZjCqfkSS8ZpgLxw4rVjVXadJFsv4DZ704M5wGIWakLz/sFW8sciuooF1QTl9DC5COO2FCELjsTLn5flEDuMN+a7M13ArSi0mN8WQaavzrCZCMzrHR0Ch6DD1XcIxNG7l31jgfYIl7a1nGJg0hoqw0GQBFeBzOiC0+cykEUeErWcq4XGCuP3jhEVixhrFvKdUld5NsFEzEgHhCQDVeGh3+XpqXiBajduNBAJGiTuR2HOclhx4oox7RKMNqoN8fSIcAeq2kEMSIN5X/1W1tIxKz3oVuQ2eRYENaC8yzCaglXwYDkwb/uNo5oe8jYHv6douvZwafwocR03Wu8Ty0T5yHw2/9qNqZl+Qy/xhl9jbNFo7OvG7RnWTgZYAgJN5jN8kjc+B/gKtWk/QPetKurVf1fdJtTNdzUM3SAmFajYiDzHJh+Q4g801EhznJA1l4M93FHrMa0lFu4wYQgo0TVgMEPEuAhmhVtprFP40SD9ZYcH8Mlijrc36crbebCATqndpj+U4mS0eCQSvsSRVcmZYN6hicqRm0zGmHcO+7hHSoHOvfoQ9ISTN2AkcEuPACQIxSGGg=
+
     # AWS_SECRET_ACCESS_KEY
     - secure: B/HYX93UxL+IBTbhY2Umn3PSRWWin3mpNzkFTymCZQO5qf6OTakXUfolqlBxFMwmmQ8facYvWk6Lakrf41UWEe3rQyPgQ9ZzwwFZma60T/vF4bDIPN5bBXpEmTIBF1wyohHVRlVv7qzusTa9PGUvWwQagIQaTxgO2ux0pjFo7hoSlQCWrGvXOwfAAbxPM3oR4tqUyWUE4joEZToWMsNQXPE99EW7O1FmNImXH+K51okpW0vcVOw41c+ZPUjrsomzL2KRm9vz5NDP0071YG84xvuWjHlJVhsnkaPZeHzCzjpSDeVmMeQ6nOtpu+hRpf5R1aULkRsZItHGouTqZgDzhAok3fwwiuZKJwD6yyuNPQAM7JcKsjUIpNEhm8fs5DqZQIUFJkThhymRj345nNxPOMEOwliLFBoBrHI0VEXKMBYoDCZ7ra/M/tvK+kan0nuLtC+vtiYZBhx3yxwcK7fp6fk56jMci4pnrzWwAjapdm9H8FpZVshVRA6A9QgRdSrjMfpmej6TXWiDuDRv3Sw99vld5gJ7ghGAuhyqjCxY2LHYobUOtc91t0rcHMevIzw4MzE8unurA2ccIM2D2bEf3pSuB37i8YHIXsnGCe3O4Sa9nP0p5uImSAxWLRJJvCzjFTCYk4MbM7IhcxEXmCx+bTJPiMa5aDmxEVHMXlRlsiM=
 
@@ -32,6 +35,8 @@ install:
 script:
 
   # Check that Terraform config files are formatted correctly and that they validate.
+  - export TF_VAR_slack_hook_dev="${SLACK_HOOK_DEV}"
+  - export TF_VAR_slack_hook_prod="${SLACK_HOOK_PROD}"
   - terraform fmt -check infrastructure/
   - terraform init infrastructure/
   - terraform validate infrastructure/
@@ -45,24 +50,23 @@ script:
   # THIS SHOULD BE COMMENTED OUT IF STATE IS MANAGED LOCALLY, WHICH IS THE DEFAULT IN TERRAFORM.
   # FOR SECURITY REASONS, STATE SHOULD NEVER BE COMMITTED TO THE REPOSITORY.
   #
-  - terraform plan -detailed-exitcode infrastructure/ > /dev/null
+  - terraform plan -detailed-exitcode -lock=false infrastructure/ > /dev/null
 
   # Get key info from Terraform variables.
   # TODO: Some of this is still set manually here while we transition across to Terraform managed infrastructure.
-
-  - LAMBDA_NAME=coffeeShopMessage
-  - LAMBDA_DESCRIPTION="$( terraform output function_description )"
-  - LAMBDA_TIMEOUT="$( terraform output function_timeout )"
-  - LAMBDA_ROLE=arn:aws:iam::873114526714:role/genericLambdaRole
-  - LAMBDA_ALIAS="$( terraform output function_alias )"
-  - LAMBDA_RUNTIME="$( terraform output prod_stage_alias_name )"
+  - export LAMBDA_NAME=coffeeShopMessage
+  - export LAMBDA_DESCRIPTION="$( terraform output function_description )"
+  - export LAMBDA_TIMEOUT="$( terraform output function_timeout )"
+  - export LAMBDA_ROLE=arn:aws:iam::873114526714:role/genericLambdaRole
+  - export LAMBDA_ALIAS="$( terraform output function_alias )"
+  - export LAMBDA_RUNTIME="$( terraform output prod_stage_alias_name )"
+  - export SNS_TOPIC_DEV=arn:aws:sns:ap-southeast-2:873114526714:tim-dev-queue
 
   # Split the handler into two variables for Travis deployment.
   # @see https://stackoverflow.com/a/19915925/1982136
   - TF_OUTPUT_HANDLER="$( terraform output function_handler )"
   - IFS=. read LAMBDA_MODULE LAMBDA_HANDLER <<< "${TF_OUTPUT_HANDLER##*-}"
-
-  - SNS_TOPIC_DEV=arn:aws:sns:ap-southeast-2:873114526714:tim-dev-queue
+  - export LAMBDA_MODULE && export LAMBDA_HANDLER
 
   # Linting and testing.
   - yarn lint
