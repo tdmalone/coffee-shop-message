@@ -123,8 +123,19 @@ resource "aws_iam_policy" "read_only_state" {
     {
       "Effect": "Allow",
       "Action": [
-        "s3:List*",
-        "s3:Get*"
+        "s3:GetBucketLocation",
+        "s3:GetBucketPolicy",
+        "s3:GetBucketVersioning",
+        "s3:GetObject",
+        "s3:GetObjectAcl",
+        "s3:GetObjectVersion",
+        "s3:GetObjectVersionAcl",
+        "s3:GetObjectVersionForReplication",
+        "s3:ListBucket",
+        "s3:ListBucketMultipartUploads",
+        "s3:ListBucketVersions",
+        "s3:ListMultipartUploadParts",
+        "s3:ListObjects"
       ],
       "Resource": "${aws_s3_bucket.state.arn}"
     },

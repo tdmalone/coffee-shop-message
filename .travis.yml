@@ -28,7 +28,7 @@ install:
   - yarn
 
   # Install Terraform for checking infrastructure configuration.
-  - curl --location https://releases.hashicorp.com/terraform/0.11.5/terraform_0.11.5_linux_amd64.zip > terraform.zip
+  - curl --location https://releases.hashicorp.com/terraform/0.11.7/terraform_0.11.7_linux_amd64.zip > terraform.zip
   - unzip terraform.zip
   - terraform() { "${TRAVIS_BUILD_DIR}/terraform" "$@"; }
 
@@ -50,7 +50,7 @@ script:
   # THIS SHOULD BE COMMENTED OUT IF STATE IS MANAGED LOCALLY, WHICH IS THE DEFAULT IN TERRAFORM.
   # FOR SECURITY REASONS, STATE SHOULD NEVER BE COMMITTED TO THE REPOSITORY.
   #
-  - terraform plan -detailed-exitcode -lock=false infrastructure/ > /dev/null
+  - ( cd infrastructure && terraform plan -detailed-exitcode -lock=false > /dev/null )
 
   # Get key info from Terraform variables.
   - export LAMBDA_NAME="$( cd infrastructure && terraform output function_name )"
