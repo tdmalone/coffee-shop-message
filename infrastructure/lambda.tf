@@ -118,7 +118,8 @@ EOF
 resource "aws_lambda_permission" "permission_dev_stage" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = "${aws_lambda_function.function.arn}:${var.dev_stage_alias_name}"
+  function_name = "${aws_lambda_function.function.arn}"
+  qualifier     = "${var.dev_stage_alias_name}"
   principal     = "apigateway.amazonaws.com"
   depends_on    = ["aws_lambda_alias.alias_dev"]
 }
@@ -126,7 +127,8 @@ resource "aws_lambda_permission" "permission_dev_stage" {
 resource "aws_lambda_permission" "permission_prod_stage" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = "${aws_lambda_function.function.arn}:${var.prod_stage_alias_name}"
+  function_name = "${aws_lambda_function.function.arn}"
+  qualifier     = "${var.prod_stage_alias_name}"
   principal     = "apigateway.amazonaws.com"
   depends_on    = ["aws_lambda_alias.alias_prod"]
 }
