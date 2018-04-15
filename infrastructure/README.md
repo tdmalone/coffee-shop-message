@@ -43,7 +43,7 @@ Stick the button on the wall and you're ready to go! When it is pressed, you sho
 
 To remove all infrastructure, run:
 
-    terraform destroy $(for r in `terraform state list | fgrep -v \.state` ; do printf "-target ${r} "; done)
+    $ terraform destroy $(for r in `terraform state list | fgrep -v \.state` ; do printf "-target ${r} "; done)
 
 and follow the prompts.
 

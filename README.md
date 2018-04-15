@@ -12,7 +12,7 @@ Like all good cafes they open early, and sometimes close early - particularly wh
 
 To install locally:
 
-    yarn
+    $ yarn
 
 As input is required to run the function, the easiest way to see it in action is to run the **integration tests** documented below.
 
@@ -22,13 +22,13 @@ Then, to install on [AWS](https://aws.amazon.com/) using [Terraform](https://www
 
 To run all tests at once:
 
-    yarn test
+    $ yarn test
 
 ### Unit Tests
 
 To run:
 
-    yarn unit-tests
+    $ yarn unit-tests
 
 **Note that unit tests are yet to be written, and will currently just pass!!**
 
@@ -36,7 +36,7 @@ To run:
 
 To run:
 
-    yarn docker-tests
+    $ yarn docker-tests
 
 Integration tests require [Docker](https://docs.docker.com/install/). They run in `lambci/lambda:nodejs6.10` ([GitHub](https://github.com/lambci/docker-lambda) | [Docker Hub](https://hub.docker.com/r/lambci/lambda/)).
 
