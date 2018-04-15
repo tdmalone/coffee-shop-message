@@ -10,11 +10,8 @@
 'use strict';
 
 const aws = require( 'aws-sdk' ),
-      https = require( 'https' );
-
-const HTTP_OK = 200,
-      HTTP_SERVER_ERROR = 500,
-      CI = process.env.CI; // eslint-disable-line no-process-env
+      https = require( 'https' ),
+      lambdaProxyResponse = require( '@tdmalone/lambda-proxy-response' );
 
 // These will be like constants, but we can only set them once we have the context object.
 let SLACK_HOOK, SNS_TOPIC;
@@ -58,42 +55,13 @@ exports.handler = function( event, context, callback ) {
 
   Promise.all([ sendSnsMessage( message ), sendToSlack( message ) ])
     .then( ( response ) => {
-      finishRequest( null, response, callback );
+      lambdaProxyResponse( null, 'Message sent, thanks guys!', callback );
     })
     .catch( ( error ) => {
-      finishRequest( error, null, callback );
+      lambdaProxyResponse( error, null, callback );
     });
 
 }; // Exports.handler.
-
-/**
- * Finishes off the incoming API Gateway request by responding with a valid API Gateway response
- * object, depending on whether the request succeeded or an issue was encountered. Currently
- * assumes all issues are server issues (i.e. HTTP status code 500).
- *
- * @param {mixed}    error    The error encountered during processing of the request. Could be a
- *                            string, an object, or an Error - or null if no error occurred.
- * @param {mixed}    response The response received from external services while processing. Could
- *                            be a string, an object, an array... or null if an error occurred.
- * @param {function} callback Function to call to report completion.
- * @return {undefined}
- * @see https://docs.aws.amazon.com/apigateway/latest/developerguide/handle-errors-in-lambda-integration.html
- */
-function finishRequest( error, response, callback ) {
-
-  const apiResponse = {
-    isBase64Encoded: false,
-    headers:         {},
-    statusCode:      error ? ( error.statusCode || HTTP_SERVER_ERROR ) : HTTP_OK,
-    body:            error ? ( error.message || error ) : 'Message sent, thanks guys!'
-  };
-
-  const logFunction = error ? console.error : console.log;
-  logFunction( error ? 'Error: ' + error : response );
-  logFunction( apiResponse );
-  callback( error && CI ? error : null, apiResponse );
-
-} // Function finishRequest.
 
 /**
  * Sends an SNS message to the topic provided by the environment.
@@ -126,7 +94,6 @@ function sendSnsMessage( message ) {
       resolve( result );
 
     }); // Sns.publish.
-
   }); // Return Promise.
 } // Function sendSnsMessage.
 

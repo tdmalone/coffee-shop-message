@@ -3,3 +3,8 @@
 /node_modules/
 *.log
 package-lock.json
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.zip
