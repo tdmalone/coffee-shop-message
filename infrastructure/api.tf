@@ -70,7 +70,9 @@ resource "null_resource" "logging" {
   }
 }
 
-resource "aws_cloudwatch_log_group" "default" {}
+resource "aws_cloudwatch_log_group" "default" {
+  retention_in_days = 7
+}
 
 /**
  * Deployments to get each stage started.
