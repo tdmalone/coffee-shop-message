@@ -16,7 +16,7 @@ To install locally:
 
 As input is required to run the function, the easiest way to see it in action is to run the **integration tests** documented below.
 
-To install on [AWS](https://aws.amazon.com/) using [Terraform](https://www.terraform.io), see [infrastructure/](infrastructure/README.md).
+Then, to install on [AWS](https://aws.amazon.com/) using [Terraform](https://www.terraform.io), see [infrastructure/](infrastructure/). You can then configure a [Flic button](https://flic.io) to send POST requests to your new API whenever it is pressed!
 
 ## Tests
 
@@ -30,7 +30,7 @@ To run:
 
     yarn unit-tests
 
-Unit tests are yet to be written, and will currently just pass.
+**Note that unit tests are yet to be written, and will currently just pass!!**
 
 ### Integration Tests
 
@@ -50,11 +50,6 @@ The following environment variables must be defined on your system:
 * `CI` - optional
 
 The final `CI` variable above is optional, but recommended. If set (which it is [by default on Travis CI](https://docs.travis-ci.com/user/environment-variables/#Default-Environment-Variables), for instance), it will cause errors to be _thrown_ rather than returned as an [API Gateway style response](https://docs.aws.amazon.com/apigateway/latest/developerguide/handle-errors-in-lambda-integration.html). If not set, tests will still 'pass', as errors will be mapped to a HTTP status code rather than thrown.
-
-## TODO
-
-* Add basic unit tests
-* Come up with an easy way (Lambda func with static frontend?) for the shop or customers themselves to subscribe e-mails and mobile numbers to the SNS topic
 
 ## License
 

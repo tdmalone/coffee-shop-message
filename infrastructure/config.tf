@@ -47,6 +47,10 @@ resource "aws_s3_bucket" "state" {
       }
     }
   }
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_dynamodb_table" "state" {
@@ -58,6 +62,10 @@ resource "aws_dynamodb_table" "state" {
   attribute {
     name = "LockID"
     type = "S"
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
