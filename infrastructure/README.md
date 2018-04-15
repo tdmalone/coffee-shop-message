@@ -31,6 +31,7 @@ Check the response, and look out for a message in the e-mail address you subscri
 Your final step is to set up your [Flic button](https://flic.io), using the official smartphone app. There are three messages built in to the function: one for the shop being about to close (`/closing/soon`), one for it closing right now (`/closing/now`), and one to notify that it will close early at some stage today (`/closing/early`).
 
 * To get your base API URL, run `terraform output api_invoke_url_prod`.
+    - You can customise this with your own domain name through API Gateway's [Custom Domain Names](https://console.aws.amazon.com/apigateway/home#/custom-domain-names) feature
 * To get your API key, run `terraform output api_key`.
 * Your three trigger URLs are made up of your base URL, followed by `/closing/soon`, `/closing/now` and `/closing/early`.
 * The API key must be sent in the `X-Api-Key` header, which is how the AWS API Gateway expects it.

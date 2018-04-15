@@ -22,6 +22,10 @@ output "api_invoke_url_dev" {
   value = "${aws_api_gateway_deployment.dev.invoke_url}${var.dev_stage_alias_name}/${var.rest_api_path}"
 }
 
+output "api_invoke_url_prod" {
+  value = "${aws_api_gateway_deployment.prod.invoke_url}${var.prod_stage_alias_name}/${var.rest_api_path}"
+}
+
 output "api_key" {
   value = "${aws_api_gateway_api_key.default.value}"
 }
