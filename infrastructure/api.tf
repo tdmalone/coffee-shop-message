@@ -213,13 +213,13 @@ resource "aws_api_gateway_usage_plan" "default" {
   }
 
   quota_settings {
-    limit  = 20
+    limit  = "${var.quota_per_day}"
     period = "DAY"
   }
 
   throttle_settings {
     burst_limit = 5
-    rate_limit  = 10
+    rate_limit  = "${var.throttle_per_second}"
   }
 }
 

@@ -51,6 +51,14 @@ variable "rest_api_path" {
   default = "coffee"
 }
 
+variable "quota_per_day" {
+  default = 20
+}
+
+variable "throttle_per_second" {
+  default = 10
+}
+
 /**
  * The following variables should be set elsewhere for security reasons, eg. on the command line,
  * in a .tfvars file, or as environment variables.
