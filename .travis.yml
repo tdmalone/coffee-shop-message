@@ -5,7 +5,7 @@ node_js: 6.10
 env:
   global:
 
-    - AWS_ACCESS_KEY_ID=AKIAJNPBZJSUNV7GJSVQ
+    - AWS_ACCESS_KEY_ID=AKIAIZYDGQ7PKG27OFJQ
     - AWS_DEFAULT_REGION=ap-southeast-2
 
     # SLACK_HOOK_DEV
@@ -15,12 +15,17 @@ env:
     - secure: ewvN1Q96mZt/iR+jnTkZCyxWIMPWhzgQvCNwlvQZhfw1MrPN8tyKy4w60injpU4yktZs+QxSZaCEYgEWoZipsUx2+BJ8QknRI2lFLo9ZjCqfkSS8ZpgLxw4rVjVXadJFsv4DZ704M5wGIWakLz/sFW8sciuooF1QTl9DC5COO2FCELjsTLn5flEDuMN+a7M13ArSi0mN8WQaavzrCZCMzrHR0Ch6DD1XcIxNG7l31jgfYIl7a1nGJg0hoqw0GQBFeBzOiC0+cykEUeErWcq4XGCuP3jhEVixhrFvKdUld5NsFEzEgHhCQDVeGh3+XpqXiBajduNBAJGiTuR2HOclhx4oox7RKMNqoN8fSIcAeq2kEMSIN5X/1W1tIxKz3oVuQ2eRYENaC8yzCaglXwYDkwb/uNo5oe8jYHv6douvZwafwocR03Wu8Ty0T5yHw2/9qNqZl+Qy/xhl9jbNFo7OvG7RnWTgZYAgJN5jN8kjc+B/gKtWk/QPetKurVf1fdJtTNdzUM3SAmFajYiDzHJh+Q4g801EhznJA1l4M93FHrMa0lFu4wYQgo0TVgMEPEuAhmhVtprFP40SD9ZYcH8Mlijrc36crbebCATqndpj+U4mS0eCQSvsSRVcmZYN6hicqRm0zGmHcO+7hHSoHOvfoQ9ISTN2AkcEuPACQIxSGGg=
 
     # AWS_SECRET_ACCESS_KEY
-    - secure: B/HYX93UxL+IBTbhY2Umn3PSRWWin3mpNzkFTymCZQO5qf6OTakXUfolqlBxFMwmmQ8facYvWk6Lakrf41UWEe3rQyPgQ9ZzwwFZma60T/vF4bDIPN5bBXpEmTIBF1wyohHVRlVv7qzusTa9PGUvWwQagIQaTxgO2ux0pjFo7hoSlQCWrGvXOwfAAbxPM3oR4tqUyWUE4joEZToWMsNQXPE99EW7O1FmNImXH+K51okpW0vcVOw41c+ZPUjrsomzL2KRm9vz5NDP0071YG84xvuWjHlJVhsnkaPZeHzCzjpSDeVmMeQ6nOtpu+hRpf5R1aULkRsZItHGouTqZgDzhAok3fwwiuZKJwD6yyuNPQAM7JcKsjUIpNEhm8fs5DqZQIUFJkThhymRj345nNxPOMEOwliLFBoBrHI0VEXKMBYoDCZ7ra/M/tvK+kan0nuLtC+vtiYZBhx3yxwcK7fp6fk56jMci4pnrzWwAjapdm9H8FpZVshVRA6A9QgRdSrjMfpmej6TXWiDuDRv3Sw99vld5gJ7ghGAuhyqjCxY2LHYobUOtc91t0rcHMevIzw4MzE8unurA2ccIM2D2bEf3pSuB37i8YHIXsnGCe3O4Sa9nP0p5uImSAxWLRJJvCzjFTCYk4MbM7IhcxEXmCx+bTJPiMa5aDmxEVHMXlRlsiM=
+    - secure: fTbRlIS4++/NN1NYUsAEf8mz/Bg8dOUEk/1h/X95QUcZYs+0wOWSQ8E+T1bcgMekIOtR31kzgQkgI1vK4tDTY/p8w1lNPyAwSsXYJlYNI7plUs+wOf544iwoKj9rFykF9bSTgwrVu6w+W4cztdIdh5lVi8G7fHQgOQtgo7OFIwhnRuFZ8Yqc0JCXax8aDXHWTMrKqfpzdtgN6ID+xpUCPJeMHyRTV5/jxreH92TbWB6yX/zfeQeJ6BgPM/cAzwv8GH1s9wjbYl0fyOUloAYAYb6KtBehYk7xlrV2GKLXnpxYRDBr6wlsEq1lKyYywvHEEx/OuEyNV7VeSbbQbqIBg0vcEsE3YIu/v38nWhwEQ3Cje3jqvOPpn7NSXl1wX4bUvbed0KjDkG70C3qVJK4qBUK4HsPz5tX98quQuoDtIf6YOa0QhOexjJGrDU6VJ966Em6rwdEJH6c1VRxTArxIMSyRCjBT8F3e69GAKRFg80q7UcuoqCVd4qy6Es1TjWlWRZI24qE9LfExMlee3U15qKkOwsFMC1l3clVwna7UUsNEHzpPPgbhbNf9cEMVFKP9oti0OTILgiK2JRoOhwShGWS30yV7DrkK2iBZR9xKzZtelLjdbtdHBAKSZEeK3NAaIlLPHImHH7GmAETcexF9KVmoCundIsLIisLzQxomrfI=
 
 cache:
   yarn: true
   directories:
     - node_modules
+
+# Skip builds on version tags, as they'll occur on the branch anyway.
+branches:
+  except:
+    - /^v[0-9]+\.[0-9]+\.[0-9]+/
 
 install:
 
@@ -41,18 +46,12 @@ script:
   - ( cd infrastructure && terraform init -input=false -lock=false )
   - ( cd infrastructure && terraform validate )
 
-  # If state is stored remotely, we can also check that the state is up-to-date - i.e. that no
-  # changes have been pushed without being applied.
-  #
-  # We only care about the exit code here, and don't want to expose any potentially sensitive data,
-  # so we also redirect the output.
-  #
-  # THIS SHOULD BE COMMENTED OUT IF STATE IS MANAGED LOCALLY, WHICH IS THE DEFAULT IN TERRAFORM.
-  # FOR SECURITY REASONS, STATE SHOULD NEVER BE COMMITTED TO THE REPOSITORY.
-  #
+  # As state is stored remotely, we can also check that the state is up-to-date - i.e. that no
+  # changes have been pushed without being applied. We only care about the exit code here, and don't
+  # want to expose any potentially sensitive data, so we also redirect the output.
   - ( cd infrastructure && terraform plan -detailed-exitcode -lock=false > /dev/null )
 
-  # Get key info from Terraform variables.
+  # Get key info for deployment from Terraform variables.
   - export LAMBDA_NAME="$( cd infrastructure && terraform output function_name )"
   - export LAMBDA_DESCRIPTION="$( cd infrastructure && terraform output function_description )"
   - export LAMBDA_TIMEOUT="$( cd infrastructure && terraform output function_timeout )"
