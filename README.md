@@ -12,11 +12,13 @@ Like all good cafes they open early, and sometimes close early - particularly wh
 
 To install locally:
 
+    $ git clone https://github.com/tdmalone/coffee-shop-message.git
+    $ cd coffee-shop-message
     $ yarn
 
-As input is required to run the function, the easiest way to see it in action is to run the **integration tests** documented below.
+Then, as input is required to run the function, the easiest way to see it in action is to run the **integration tests** documented below.
 
-Then, to install on [AWS](https://aws.amazon.com/) using [Terraform](https://www.terraform.io), see [infrastructure/](infrastructure/). You can then configure a [Flic button](https://flic.io) to send POST requests to your new API whenever it is pressed!
+To really use the function as it was intended though, you'll need to install on [AWS](https://aws.amazon.com/). To do this in a mostly automated way using [Terraform](https://www.terraform.io), see [infrastructure/](infrastructure/). You can then configure a [Flic button](https://flic.io) to send POST requests to your new AWS API whenever it is pressed!
 
 ## Tests
 
