@@ -55,7 +55,7 @@ exports.handler = function( event, context, callback ) {
 
   Promise.all([ sendSnsMessage( message ), sendToSlack( message ) ])
     .then( ( response ) => {
-      lambdaProxyResponse( null, JSON.stringify( response ), callback );
+      lambdaProxyResponse( null, 'Message sent, thanks guys!', callback );
     })
     .catch( ( error ) => {
       lambdaProxyResponse( error, null, callback );
