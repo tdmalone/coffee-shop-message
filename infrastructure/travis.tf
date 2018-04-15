@@ -174,7 +174,10 @@ resource "aws_iam_policy" "read_only_resources" {
       "Action": "apigateway:GET",
       "Resource": [
         "arn:aws:apigateway:${data.aws_region.current.name}::/restapis/${aws_api_gateway_rest_api.api.id}",
-        "arn:aws:apigateway:${data.aws_region.current.name}::/restapis/${aws_api_gateway_rest_api.api.id}/*"
+        "arn:aws:apigateway:${data.aws_region.current.name}::/restapis/${aws_api_gateway_rest_api.api.id}/*",
+        "arn:aws:apigateway:${data.aws_region.current.name}::/apikeys/${aws_api_gateway_api_key.default.id}",
+        "arn:aws:apigateway:${data.aws_region.current.name}::/usageplans/${aws_api_gateway_usage_plan.default.id}",
+        "arn:aws:apigateway:${data.aws_region.current.name}::/usageplans/${aws_api_gateway_usage_plan.default.id}/keys/${aws_api_gateway_api_key.default.id}"
       ]
     },
     {
@@ -190,6 +193,7 @@ resource "aws_iam_policy" "read_only_resources" {
       "Effect": "Allow",
       "Action": [
         "iam:GetUser",
+        "iam:ListAccessKeys",
         "iam:ListAttachedUserPolicies"
       ],
       "Resource": "${aws_iam_user.travis_user.arn}"
@@ -219,6 +223,16 @@ resource "aws_iam_policy" "read_only_resources" {
       "Effect": "Allow",
       "Action": "lambda:GetPolicy",
       "Resource": "${aws_lambda_function.function.arn}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "logs:DescribeLogGroups",
+      "Resource": "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group::log-stream:"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "logs:ListTagsLogGroup",
+      "Resource": "${aws_cloudwatch_log_group.default.arn}"
     }
   ]
 }
