@@ -13,11 +13,11 @@ resource "aws_lambda_function" "function" {
   function_name = "${var.function_name}"
   description   = "${var.function_description}"
   role          = "${aws_iam_role.role.arn}"
-  handler       = "${var.function_handler}"
+  handler       = "${var.function_module}.${var.function_handler}"
   runtime       = "${var.function_runtime}"
   timeout       = "${var.function_timeout}"
   publish       = true
-  filename      = "../function.zip"             # Created by running `yarn bootstrap`.
+  filename      = "../function.zip"                                # Created by running `yarn bootstrap`.
 
   environment {
     variables = {

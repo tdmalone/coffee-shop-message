@@ -66,6 +66,10 @@ output "function_runtime" {
   value = "${var.function_runtime}"
 }
 
+output "function_module" {
+  value = "${var.function_module}"
+}
+
 output "function_handler" {
   value = "${var.function_handler}"
 }

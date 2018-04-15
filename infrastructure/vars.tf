@@ -19,8 +19,12 @@ variable "function_description" {
   default = "Sends Slack and SNS messages when The Good Food Collective is closing for the day."
 }
 
+variable "function_module" {
+  default = "index"
+}
+
 variable "function_handler" {
-  default = "index.handler"
+  default = "handler"
 }
 
 variable "function_runtime" {

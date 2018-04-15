@@ -56,16 +56,12 @@ script:
   - export LAMBDA_NAME="$( cd infrastructure && terraform output function_name )"
   - export LAMBDA_DESCRIPTION="$( cd infrastructure && terraform output function_description )"
   - export LAMBDA_TIMEOUT="$( cd infrastructure && terraform output function_timeout )"
+  - export LAMBDA_MODULE="$( cd infrastructure && terraform output function_module )"
+  - export LAMBDA_HANDLER="$( cd infrastructure && terraform output function_handler )"
   - export LAMBDA_ROLE="$( cd infrastructure && terraform output function_role )"
   - export LAMBDA_ALIAS="$( cd infrastructure && terraform output function_alias )"
   - export LAMBDA_RUNTIME="$( cd infrastructure && terraform output function_runtime )"
   - export SNS_TOPIC_DEV="$( cd infrastructure && terraform output sns_topic_dev )"
-
-  # Split the handler into two variables for Travis deployment.
-  # @see https://stackoverflow.com/a/19915925/1982136
-  - TF_OUTPUT_HANDLER="$( cd infrastructure && terraform output function_handler )"
-  - IFS=. read LAMBDA_MODULE LAMBDA_HANDLER <<< "${TF_OUTPUT_HANDLER##*-}"
-  - export LAMBDA_MODULE && export LAMBDA_HANDLER
 
   # Linting and testing.
   - yarn lint
